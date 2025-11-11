@@ -1,7 +1,9 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { RoleProvider } from "@/lib/role-context"
 
-export default function InventoryLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleProvider>
       <div className="flex h-screen overflow-hidden">

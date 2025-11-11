@@ -1,14 +1,22 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { RoleProvider } from "@/lib/role-context"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <RoleProvider>
-      <div className="flex h-screen overflow-hidden">
-        <AppSidebar />
-        <main className="flex-1 overflow-hidden">{children}</main>
-      </div>
-    </RoleProvider>
-  )
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
+  title: "Doctor del Crédito",
+  description: "Sistema de gestión BDC para concesionarios",
 }
 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="es">
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}

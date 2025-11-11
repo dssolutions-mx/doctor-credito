@@ -1,7 +1,9 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { RoleProvider } from "@/lib/role-context"
 
-export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardGroupLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleProvider>
       <div className="flex h-screen overflow-hidden">
