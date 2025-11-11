@@ -262,7 +262,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <GlassCard>
-            <CardHeader>
+          <CardHeader>
             <CardTitle>Acciones Rápidas</CardTitle>
             <CardDescription>Tareas comunes para acelerar tu flujo de trabajo</CardDescription>
           </CardHeader>

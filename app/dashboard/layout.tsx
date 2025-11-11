@@ -9,10 +9,10 @@ export default function DashboardLayout({
 }) {
   return (
     <RoleProvider>
-      <div className="flex h-screen overflow-hidden bg-background">
-        <AppSidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </div>
+    <div className="flex h-screen overflow-hidden bg-background">
+      <AppSidebar />
+      <main className="flex-1 overflow-y-auto">{children}</main>
+    </div>
     </RoleProvider>
   )
 }

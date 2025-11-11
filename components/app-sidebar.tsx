@@ -74,10 +74,10 @@ export function AppSidebar() {
           <Car className="w-5 h-5 text-primary-foreground" />
         </div>
         {!isCollapsed && (
-          <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-foreground truncate">Doctor del Crédito</span>
-            <span className="text-xs text-muted-foreground truncate">AutoMax Miami</span>
-          </div>
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-semibold text-foreground truncate">Doctor del Crédito</span>
+          <span className="text-xs text-muted-foreground truncate">AutoMax Miami</span>
+        </div>
         )}
         <Button
           variant="ghost"
@@ -96,24 +96,24 @@ export function AppSidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
         <TooltipProvider delayDuration={0}>
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
+        {navigation.map((item) => {
+          const isActive = pathname === item.href
             const navItem = (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
                   "flex items-center rounded-lg text-sm font-medium transition-all",
                   isCollapsed ? "justify-center px-3 py-2.5" : "gap-3 px-3 py-2.5",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                )}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+              )}
+            >
+              <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && <span className="truncate">{item.name}</span>}
-              </Link>
-            )
+            </Link>
+          )
 
             if (isCollapsed) {
               return (
@@ -127,18 +127,18 @@ export function AppSidebar() {
             }
 
             return navItem
-          })}
+        })}
         </TooltipProvider>
       </nav>
 
       {/* User Profile */}
       <div className="border-t border-border p-4">
         {!isCollapsed && (
-          <div className="flex items-center gap-3 mb-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
-              <AvatarFallback className="bg-primary text-primary-foreground">MR</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
+            <AvatarFallback className="bg-primary text-primary-foreground">MR</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">Maria Rodriguez</p>
             <p className="text-xs text-muted-foreground truncate">
               {role === "dealer" ? "Concesionario" : "Agente BDC"}
@@ -151,7 +151,7 @@ export function AppSidebar() {
             <Avatar className="h-10 w-10 border-2 border-primary/20">
               <AvatarFallback className="bg-primary text-primary-foreground">MR</AvatarFallback>
             </Avatar>
-          </div>
+        </div>
         )}
         <Button
           variant="outline"

@@ -44,38 +44,87 @@ function SheetOverlay({
   )
 }
 
+interface SheetContentProps
+  extends React.ComponentProps<typeof SheetPrimitive.Content> {
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  showHandle?: boolean
+  bodyClassName?: string
+  unstyled?: boolean
+}
+
 function SheetContent({
   className,
   children,
   side = 'right',
+  showHandle = false,
+  bodyClassName,
+  unstyled = false,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: 'top' | 'right' | 'bottom' | 'left'
-}) {
+}: SheetContentProps) {
+  const shouldUseStyledLayout = !unstyled && side === 'right'
+
+  if (!shouldUseStyledLayout) {
+    return (
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetPrimitive.Content
+          data-slot="sheet-content"
+          className={cn(
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
+            side === 'right' &&
+              'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
+            side === 'left' &&
+              'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
+            side === 'top' &&
+              'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
+            side === 'bottom' &&
+              'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+            className,
+          )}
+          side={side}
+          {...props}
+        >
+          {children}
+          <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
+            <XIcon className="size-4" />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    )
+  }
+
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        side={side}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',
-          side === 'right' &&
-            'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
-          side === 'left' &&
-            'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
-          side === 'top' &&
-            'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b',
-          side === 'bottom' &&
-            'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t',
+          'pointer-events-none fixed inset-y-0 right-0 z-50 flex justify-end transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right md:right-4',
           className,
         )}
         {...props}
       >
-        {children}
-        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
-          <XIcon className="size-4" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
+        <div className="pointer-events-auto flex h-full w-full justify-end">
+          <div className="glass-surface relative flex h-full w-full max-w-[520px] overflow-hidden rounded-none md:w-[480px] md:rounded-3xl">
+            <SheetPrimitive.Close className="absolute right-6 top-6 flex size-10 items-center justify-center rounded-full bg-white/70 text-foreground/70 backdrop-blur-lg transition hover:bg-white focus:ring-2 focus:ring-primary/30 focus:outline-hidden disabled:pointer-events-none dark:bg-white/10 dark:text-foreground/80">
+              <XIcon className="size-5" />
+              <span className="sr-only">Cerrar</span>
+            </SheetPrimitive.Close>
+            <div className="flex h-full w-full flex-col overflow-hidden">
+              {showHandle && <div className="glass-handle mt-6" />}
+              <div
+                className={cn(
+                  'flex-1 overflow-y-auto px-6 pb-8 pt-20 space-y-6',
+                  bodyClassName,
+                )}
+              >
+                {children}
+              </div>
+            </div>
+          </div>
+        </div>
       </SheetPrimitive.Content>
     </SheetPortal>
   )

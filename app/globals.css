@@ -66,7 +66,7 @@
   --chart-4: oklch(0.75 0.15 75);
   --chart-5: oklch(0.58 0.22 25);
 
-  --radius: 0.75rem;
+  --radius: 1rem;
 
   /* Sidebar */
   --sidebar: oklch(0.99 0.003 264);
@@ -148,8 +148,8 @@
 }
 
 @theme inline {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Geist", "Geist Fallback", sans-serif;
-  --font-mono: "SF Mono", Consolas, "Geist Mono", "Geist Mono Fallback", monospace;
+  --font-sans: ui-sans-serif, -apple-system, system-ui, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "Courier New", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -256,6 +256,91 @@
     background: var(--glass-bg);
     backdrop-filter: blur(40px) saturate(200%);
     border-bottom: 1px solid var(--glass-border);
+  }
+
+  /* Main sheet/surface - iOS 26 Clear Light theme */
+  .glass-surface {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+    backdrop-filter: blur(40px) saturate(180%);
+    border: 0.5px solid rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  :where(.dark .glass-surface) {
+    background: linear-gradient(135deg, rgba(28, 28, 30, 0.92), rgba(28, 28, 30, 0.85));
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.32), 0 8px 16px rgba(0, 0, 0, 0.24);
+  }
+
+  /* Section cards - white with subtle glass */
+  .glass-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.85));
+    backdrop-filter: blur(32px) saturate(180%);
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
+  }
+
+  :where(.dark .glass-section) {
+    background: linear-gradient(135deg, rgba(44, 44, 46, 0.88), rgba(44, 44, 46, 0.82));
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24), 0 2px 4px rgba(0, 0, 0, 0.16);
+  }
+
+  /* Segmented control - iOS 26 style */
+  .glass-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  :where(.dark .glass-control) {
+    background: rgba(44, 44, 46, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Button chips - white with subtle glass */
+  .glass-chip {
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 0.5px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(20px) saturate(180%);
+    transition: all 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+
+  .glass-chip:hover {
+    transform: translateY(-1px) scale(1.01);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  :where(.dark .glass-chip) {
+    background: rgba(58, 58, 60, 0.82);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :where(.dark .glass-chip:hover) {
+    background: rgba(58, 58, 60, 0.88);
+  }
+
+  .glass-handle {
+    width: 48px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.6);
+    margin-inline: auto;
+  }
+
+  :where(.dark .glass-handle) {
+    background: rgba(255, 255, 255, 0.35);
   }
 
   /* Shadow Elevation System (iOS 26) */
