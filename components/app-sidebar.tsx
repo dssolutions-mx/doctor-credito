@@ -69,32 +69,43 @@ export function AppSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-border px-6">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
+      <div className={cn(
+        "flex h-16 items-center border-b border-border",
+        isCollapsed ? "justify-center px-2" : "gap-3 px-6"
+      )}>
+        <div className={cn(
+          "bg-primary rounded-2xl flex items-center justify-center flex-shrink-0",
+          isCollapsed ? "w-10 h-10" : "w-10 h-10"
+        )}>
           <Car className="w-5 h-5 text-primary-foreground" />
         </div>
         {!isCollapsed && (
         <div className="flex flex-col min-w-0">
-          <span className="text-sm font-semibold text-foreground truncate">Doctor del Crédito</span>
-          <span className="text-xs text-muted-foreground truncate">AutoMax Miami</span>
+          <span className="text-[15px] leading-[20px] font-semibold text-foreground truncate">Doctor del Crédito</span>
+          <span className="text-[13px] leading-[18px] text-muted-foreground truncate">AutoMax Miami</span>
         </div>
         )}
+        {!isCollapsed && (
         <Button
           variant="ghost"
           size="icon"
           className={cn(
-            "ml-auto h-8 w-8 flex-shrink-0",
+            "ml-auto h-9 w-9 flex-shrink-0 rounded-xl",
             isMobile && "hidden",
           )}
           onClick={toggleSidebar}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label="Collapse sidebar"
         >
-          {isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <ChevronLeft className="h-5 w-5" />
         </Button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
+      <nav className={cn(
+        "flex-1 overflow-y-auto",
+        isCollapsed ? "space-y-2 px-2 py-4" : "space-y-1 p-4"
+      )}>
         <TooltipProvider delayDuration={0}>
         {navigation.map((item) => {
           const isActive = pathname === item.href
@@ -103,8 +114,8 @@ export function AppSidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                  "flex items-center rounded-lg text-sm font-medium transition-all",
-                  isCollapsed ? "justify-center px-3 py-2.5" : "gap-3 px-3 py-2.5",
+                  "flex items-center rounded-2xl text-[15px] leading-[20px] font-medium transition-all",
+                  isCollapsed ? "justify-center h-11 w-11" : "gap-3 px-4 py-3",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -119,7 +130,7 @@ export function AppSidebar() {
               return (
                 <Tooltip key={item.name}>
                   <TooltipTrigger asChild>{navItem}</TooltipTrigger>
-                  <TooltipContent side="right">
+                  <TooltipContent side="right" className="text-[15px] leading-[20px]">
                     <p>{item.name}</p>
                   </TooltipContent>
                 </Tooltip>
@@ -132,15 +143,18 @@ export function AppSidebar() {
       </nav>
 
       {/* User Profile */}
-      <div className="border-t border-border p-4">
+      <div className={cn(
+        "border-t border-border",
+        isCollapsed ? "p-2" : "p-4"
+      )}>
         {!isCollapsed && (
         <div className="flex items-center gap-3 mb-3">
-          <Avatar className="h-10 w-10 border-2 border-primary/20 flex-shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground">MR</AvatarFallback>
+          <Avatar className="h-11 w-11 border-2 border-primary/10 flex-shrink-0 rounded-2xl">
+            <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">MR</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">Maria Rodriguez</p>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">Maria Rodriguez</p>
+            <p className="text-[13px] leading-[18px] text-muted-foreground truncate">
               {role === "dealer" ? "Concesionario" : "Agente BDC"}
             </p>
             </div>
@@ -148,8 +162,8 @@ export function AppSidebar() {
         )}
         {isCollapsed && (
           <div className="flex justify-center mb-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarFallback className="bg-primary text-primary-foreground">MR</AvatarFallback>
+            <Avatar className="h-11 w-11 border-2 border-primary/10 rounded-2xl">
+              <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">MR</AvatarFallback>
             </Avatar>
         </div>
         )}
@@ -157,13 +171,13 @@ export function AppSidebar() {
           variant="outline"
           size="sm"
           className={cn(
-            "w-full bg-transparent",
-            isCollapsed ? "justify-center px-2" : "justify-start gap-2",
+            "bg-transparent rounded-2xl border-border",
+            isCollapsed ? "h-11 w-11 justify-center p-0" : "w-full h-10 justify-start gap-2 px-4",
           )}
           onClick={() => (window.location.href = "/login")}
         >
-          <LogOut className="h-4 w-4 flex-shrink-0" />
-          {!isCollapsed && <span className="truncate">Cerrar sesión</span>}
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && <span className="text-[15px] leading-[20px] truncate">Cerrar sesión</span>}
         </Button>
       </div>
     </div>

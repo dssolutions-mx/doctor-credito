@@ -127,10 +127,10 @@ const priorityConfig = {
 
 export default function DashboardPage() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <DashboardHeader title="Dashboard" subtitle="¡Bienvenida de nuevo, Maria! Esto es lo que está pasando hoy." />
 
-      <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-8 px-8 pt-10 pb-8 overflow-y-auto">
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
@@ -170,42 +170,43 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentLeads.map((lead) => (
+                  <Link key={lead.id} href={`/dashboard/leads/${lead.id}`}>
                   <div
-                    key={lead.id}
-                    className="flex items-start gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                    className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-foreground truncate">{lead.name}</p>
+                        <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">{lead.name}</p>
                         <div
                           className={`w-2 h-2 rounded-full ${priorityConfig[lead.priority as keyof typeof priorityConfig].color}`}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mb-2 truncate">{lead.vehicle}</p>
+                      <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">{lead.vehicle}</p>
                       <div className="flex items-center gap-2">
                         <Badge
                           variant={statusConfig[lead.status as keyof typeof statusConfig].variant}
-                          className="text-xs"
+                          className="text-[13px] rounded-full"
                         >
                           {statusConfig[lead.status as keyof typeof statusConfig].label}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">{lead.source}</span>
+                        <span className="text-[13px] leading-[18px] text-muted-foreground">{lead.source}</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">{lead.time}</span>
+                      <span className="text-[13px] leading-[18px] text-muted-foreground whitespace-nowrap">{lead.time}</span>
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-7 w-7">
-                          <Phone className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
+                          <Phone className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7">
-                          <MessageSquare className="h-3.5 w-3.5" />
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
+                          <MessageSquare className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
@@ -227,33 +228,34 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {todayAppointments.map((appointment) => (
+                  <Link key={appointment.id} href={`/dashboard/appointments/${appointment.id}`}>
                   <div
-                    key={appointment.id}
-                    className="flex items-start gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                    className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center justify-center w-16 h-16 rounded-lg bg-primary/10">
+                    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/8 border border-primary/12">
                       <div className="text-center">
-                        <div className="text-xs font-medium text-primary">{appointment.time.split(" ")[0]}</div>
-                        <div className="text-xs text-muted-foreground">{appointment.time.split(" ")[1]}</div>
+                        <div className="text-[15px] leading-[20px] font-semibold text-primary">{appointment.time.split(" ")[0]}</div>
+                        <div className="text-[13px] leading-[18px] text-muted-foreground">{appointment.time.split(" ")[1]}</div>
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-foreground truncate">{appointment.customer}</p>
+                        <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">{appointment.customer}</p>
                         {appointment.status === "confirmed" ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                          <CheckCircle2 className="h-4 w-4 text-success" />
                         ) : (
-                          <Clock className="h-3.5 w-3.5 text-warning" />
+                          <Clock className="h-4 w-4 text-warning" />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1 truncate">{appointment.vehicle}</p>
-                      <Badge variant="outline" className="text-xs">
+                      <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">{appointment.vehicle}</p>
+                      <Badge variant="outline" className="text-[13px] rounded-full">
                         {appointment.type}
                       </Badge>
                     </div>
                   </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
@@ -267,21 +269,25 @@ export default function DashboardPage() {
             <CardDescription>Tareas comunes para acelerar tu flujo de trabajo</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="justify-start gap-2 h-auto py-3 bg-transparent">
-                <Users className="h-4 w-4" />
-                <span>Agregar Nuevo Lead</span>
-              </Button>
-              <Button variant="outline" className="justify-start gap-2 h-auto py-3 bg-transparent">
-                <Calendar className="h-4 w-4" />
-                <span>Agendar Cita</span>
-              </Button>
-              <Button variant="outline" className="justify-start gap-2 h-auto py-3 bg-transparent">
-                <Phone className="h-4 w-4" />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Link href="/dashboard/leads/new">
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                  <Users className="h-5 w-5" />
+                  <span>Agregar Nuevo Lead</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/appointments/book">
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                  <Calendar className="h-5 w-5" />
+                  <span>Agendar Cita</span>
+                </Button>
+              </Link>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                <Phone className="h-5 w-5" />
                 <span>Registrar Llamada</span>
               </Button>
-              <Button variant="outline" className="justify-start gap-2 h-auto py-3 bg-transparent">
-                <MessageSquare className="h-4 w-4" />
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                <MessageSquare className="h-5 w-5" />
                 <span>Enviar Mensaje</span>
               </Button>
             </div>

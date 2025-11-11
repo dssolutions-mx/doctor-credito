@@ -52,23 +52,23 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     {
       id: "1",
       type: "call",
-      description: "Called customer - Interested, good credit, has trade-in",
+      description: "Llamada al cliente - Interesado, buen crédito, tiene vehículo para cambio",
       createdBy: "Maria Rodriguez",
-      createdAt: "2 hours ago",
+      createdAt: "hace 2 horas",
     },
     {
       id: "2",
       type: "note",
-      description: "Customer mentioned they need to finalize by end of month",
+      description: "Cliente mencionó que necesita finalizar antes de fin de mes",
       createdBy: "Maria Rodriguez",
-      createdAt: "3 hours ago",
+      createdAt: "hace 3 horas",
     },
     {
       id: "3",
       type: "status_change",
-      description: "Status changed from New to Contacted",
-      createdBy: "System",
-      createdAt: "5 hours ago",
+      description: "Estado cambiado de Nuevo a Contactado",
+      createdBy: "Sistema",
+      createdAt: "hace 5 horas",
     },
   ]
 
@@ -83,13 +83,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     <div className="flex flex-col h-full">
       <DashboardHeader title="Detalles del Lead" subtitle={`${lead.firstName} ${lead.lastName}`} />
 
-      <div className="flex-1 p-6 overflow-y-auto">
+      <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="mb-4">
             <Link href="/dashboard/leads">
-              <Button variant="ghost" size="sm" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-2 rounded-2xl">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Leads
+                Volver a Leads
               </Button>
             </Link>
           </div>
@@ -130,20 +130,20 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button onClick={handleCall} className="gap-2">
+                  <Button onClick={handleCall} className="gap-2 h-11 rounded-2xl">
                     <Phone className="h-4 w-4" />
-                    Call Now
+                    Llamar Ahora
                   </Button>
-                  <Button variant="outline" className="gap-2 bg-transparent">
+                  <Button variant="outline" className="gap-2 h-11 bg-transparent rounded-2xl">
                     <MessageSquare className="h-4 w-4" />
-                    Send SMS
+                    Enviar SMS
                   </Button>
-                  <Button variant="outline" className="gap-2 bg-transparent">
+                  <Button variant="outline" className="gap-2 h-11 bg-transparent rounded-2xl">
                     <Mail className="h-4 w-4" />
-                    Send Email
+                    Enviar Correo
                   </Button>
                   <Link href="/dashboard/appointments/book">
-                    <Button variant="outline" className="gap-2 w-full bg-transparent">
+                    <Button variant="outline" className="gap-2 w-full h-11 bg-transparent rounded-2xl">
                       <Calendar className="h-4 w-4" />
                       Agendar Cita
                     </Button>
@@ -159,7 +159,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <Car className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">Vehicle Interest</span>
+                  <span className="text-sm font-medium text-muted-foreground">Interés en Vehículo</span>
                 </div>
                 <p className="text-lg font-semibold text-foreground">{lead.vehicleInterest}</p>
               </CardContent>
@@ -169,7 +169,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <DollarSign className="h-5 w-5 text-success" />
-                  <span className="text-sm font-medium text-muted-foreground">Budget Range</span>
+                  <span className="text-sm font-medium text-muted-foreground">Rango de Presupuesto</span>
                 </div>
                 <p className="text-lg font-semibold text-foreground">{lead.budget}</p>
               </CardContent>
@@ -179,7 +179,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
                   <Clock className="h-5 w-5 text-warning" />
-                  <span className="text-sm font-medium text-muted-foreground">Last Contact</span>
+                  <span className="text-sm font-medium text-muted-foreground">Último Contacto</span>
                 </div>
                 <p className="text-lg font-semibold text-foreground">{lead.lastContact}</p>
               </CardContent>
@@ -189,16 +189,16 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           {/* Tabs */}
           <Tabs defaultValue="activity" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="qualification">Qualification</TabsTrigger>
-              <TabsTrigger value="info">Information</TabsTrigger>
+              <TabsTrigger value="activity">Actividad</TabsTrigger>
+              <TabsTrigger value="notes">Notas</TabsTrigger>
+              <TabsTrigger value="qualification">Calificación</TabsTrigger>
+              <TabsTrigger value="info">Información</TabsTrigger>
             </TabsList>
 
             <TabsContent value="activity" className="space-y-4">
               <GlassCard>
                 <CardHeader>
-                  <CardTitle>Activity Timeline</CardTitle>
+                  <CardTitle>Línea de Tiempo</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

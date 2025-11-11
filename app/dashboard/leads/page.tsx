@@ -54,7 +54,7 @@ export default function LeadsPage() {
     <div className="flex flex-col h-full">
       <DashboardHeader title="Leads" subtitle={`${filteredLeads.length} leads activos`} />
 
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 px-8 pt-10 pb-8 space-y-8 overflow-y-auto">
         {/* Filters and Actions */}
         <GlassCard>
           <CardContent className="pt-6">
@@ -154,19 +154,20 @@ export default function LeadsPage() {
 
                   {/* Actions */}
                   <div className="flex md:flex-col gap-2 flex-shrink-0">
-                    <Button size="sm" variant="outline" onClick={(e) => handleCall(e, lead)}>
+                    <Button size="sm" variant="outline" className="rounded-2xl" onClick={(e) => handleCall(e, lead)}>
                       <Phone className="h-4 w-4 md:mr-0 mr-2" />
                       <span className="md:hidden">Llamar</span>
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
+                      className="rounded-2xl"
                       onClick={(e) => {
                         e.stopPropagation()
                       }}
                     >
                       <Mail className="h-4 w-4 md:mr-0 mr-2" />
-                      <span className="md:hidden">Email</span>
+                      <span className="md:hidden">Correo</span>
                     </Button>
                     <Button
                       size="sm"

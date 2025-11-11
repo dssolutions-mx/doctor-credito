@@ -26,7 +26,7 @@ const mockNotifications: Notification[] = [
   {
     id: "1",
     type: "lead",
-    title: "New lead from Facebook",
+    title: "Nuevo lead de Facebook",
     description: "Carlos Martinez interested in 2024 Honda Civic",
     time: "2 min ago",
     read: false,
@@ -42,7 +42,7 @@ const mockNotifications: Notification[] = [
   {
     id: "3",
     type: "vehicle",
-    title: "New inventory added",
+    title: "Nuevo inventario agregado",
     description: "2020 Toyota Camry posted to Facebook",
     time: "1 hour ago",
     read: false,
@@ -74,10 +74,10 @@ export function NotificationCenter() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
+          <span>Notificaciones</span>
           {unreadCount > 0 && (
             <Badge variant="secondary" className="text-xs">
-              {unreadCount} new
+              {unreadCount} nuevos
             </Badge>
           )}
         </DropdownMenuLabel>
@@ -98,7 +98,7 @@ export function NotificationCenter() {
         </ScrollArea>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="text-center justify-center cursor-pointer">
-          View all notifications
+          Ver todas las notificaciones
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
