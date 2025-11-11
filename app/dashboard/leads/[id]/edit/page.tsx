@@ -46,7 +46,7 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Edit Lead" subtitle={`${formData.firstName} ${formData.lastName}`} />
+      <DashboardHeader title="Editar Lead" subtitle={`${formData.firstName} ${formData.lastName}`} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto space-y-6">
@@ -193,7 +193,7 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={4}
-                    placeholder="Add any additional notes about this lead..."
+                    placeholder="Agregar notas adicionales sobre este lead..."
                   />
                 </div>
 

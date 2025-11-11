@@ -86,7 +86,7 @@ export default function ReportsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Reports & Analytics" subtitle="Track performance and insights" />
+      <DashboardHeader title="Reportes y Análisis" subtitle="Rastrea el rendimiento y métricas" />
 
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         {/* Period Selector */}

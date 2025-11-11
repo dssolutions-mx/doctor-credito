@@ -16,9 +16,9 @@ interface VehicleDetailDialogProps {
 }
 
 const statusConfig = {
-  available: { label: "Available", variant: "default" as const },
-  pending: { label: "Pending", variant: "secondary" as const },
-  sold: { label: "Sold", variant: "outline" as const },
+  available: { label: "Disponible", variant: "default" as const },
+  pending: { label: "Pendiente", variant: "secondary" as const },
+  sold: { label: "Vendido", variant: "outline" as const },
 }
 
 export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDetailDialogProps) {
@@ -92,14 +92,14 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
 
           {/* Price */}
           <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10">
-            <span className="text-lg font-medium text-foreground">Price</span>
+            <span className="text-lg font-medium text-foreground">Precio</span>
             <span className="text-3xl font-bold text-primary">${vehicle.price.toLocaleString()}</span>
           </div>
 
           <Tabs defaultValue="details" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details">Vehicle Details</TabsTrigger>
-              <TabsTrigger value="actions">Actions</TabsTrigger>
+              <TabsTrigger value="details">Detalles del Vehículo</TabsTrigger>
+              <TabsTrigger value="actions">Acciones</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="space-y-4">
@@ -108,7 +108,7 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>Year</span>
+                    <span>Año</span>
                   </div>
                   <p className="text-base font-medium">{vehicle.year}</p>
                 </div>
@@ -116,9 +116,9 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Gauge className="h-4 w-4" />
-                    <span>Mileage</span>
+                    <span>Kilometraje</span>
                   </div>
-                  <p className="text-base font-medium">{vehicle.mileage.toLocaleString()} miles</p>
+                  <p className="text-base font-medium">{vehicle.mileage.toLocaleString()} millas</p>
                 </div>
 
                 <div className="space-y-2">
@@ -132,7 +132,7 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Hash className="h-4 w-4" />
-                    <span>Stock Number</span>
+                    <span>Número de Stock</span>
                   </div>
                   <p className="text-base font-medium">{vehicle.stock}</p>
                 </div>
@@ -148,22 +148,22 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
 
               {/* Full Specifications */}
               <div className="space-y-3 pt-4 border-t">
-                <h4 className="text-sm font-semibold text-foreground">Full Specifications</h4>
+                <h4 className="text-sm font-semibold text-foreground">Especificaciones Completas</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Make</span>
+                    <span className="text-muted-foreground">Marca</span>
                     <span className="font-medium">{vehicle.make}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Model</span>
+                    <span className="text-muted-foreground">Modelo</span>
                     <span className="font-medium">{vehicle.model}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Trim Level</span>
+                    <span className="text-muted-foreground">Versión</span>
                     <span className="font-medium">{vehicle.trim}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status</span>
+                    <span className="text-muted-foreground">Estado</span>
                     <Badge variant={statusConfig[vehicle.status].variant}>{statusConfig[vehicle.status].label}</Badge>
                   </div>
                 </div>
@@ -172,20 +172,20 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
 
             <TabsContent value="actions" className="space-y-3">
               <Button className="w-full" size="lg">
-                Assign to Lead
+                Asignar a Lead
               </Button>
               <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Schedule Test Drive
+                Programar Prueba de Manejo
               </Button>
               <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Print Spec Sheet
+                Imprimir Hoja de Especificaciones
               </Button>
               <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Share Vehicle
+                Compartir Vehículo
               </Button>
               {vehicle.status === "available" && (
                 <Button variant="secondary" className="w-full" size="lg">
-                  Mark as Pending
+                  Marcar como Pendiente
                 </Button>
               )}
             </TabsContent>

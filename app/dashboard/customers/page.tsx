@@ -48,7 +48,7 @@ export default function CustomersPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Customers" subtitle={`${stats.active} active customers`} />
+      <DashboardHeader title="Clientes" subtitle={`${stats.active} clientes activos`} />
 
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         {/* Stats */}

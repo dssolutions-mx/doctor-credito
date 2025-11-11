@@ -199,7 +199,7 @@ export default function BookAppointmentPage() {
                 {/* Actions */}
                 <div className="flex gap-3 justify-end pt-4">
                   <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
-                    Cancel
+                    Cancelar
                   </Button>
                   <Button type="submit" disabled={isSubmitting || !date}>
                     {isSubmitting ? "Agendando..." : "Confirmar Cita"}

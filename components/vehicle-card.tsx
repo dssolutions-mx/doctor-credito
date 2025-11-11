@@ -13,9 +13,9 @@ interface VehicleCardProps {
 }
 
 const statusConfig = {
-  available: { label: "Available", variant: "default" as const },
-  pending: { label: "Pending", variant: "secondary" as const },
-  sold: { label: "Sold", variant: "outline" as const },
+  available: { label: "Disponible", variant: "default" as const },
+  pending: { label: "Pendiente", variant: "secondary" as const },
+  sold: { label: "Vendido", variant: "outline" as const },
 }
 
 export function VehicleCard({ vehicle, onViewDetails }: VehicleCardProps) {
@@ -34,7 +34,7 @@ export function VehicleCard({ vehicle, onViewDetails }: VehicleCardProps) {
         </div>
         {vehicle.mileage < 500 && (
           <div className="absolute top-3 left-3">
-            <Badge className="bg-accent text-accent-foreground">Low Mileage</Badge>
+            <Badge className="bg-accent text-accent-foreground">Bajo Kilometraje</Badge>
           </div>
         )}
       </div>
@@ -56,7 +56,7 @@ export function VehicleCard({ vehicle, onViewDetails }: VehicleCardProps) {
           </div>
           <div className="flex items-center gap-2">
             <Gauge className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">{vehicle.mileage.toLocaleString()} mi</span>
+            <span className="text-muted-foreground">{vehicle.mileage.toLocaleString()} millas</span>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export function VehicleCard({ vehicle, onViewDetails }: VehicleCardProps) {
       <CardFooter className="p-4 pt-0">
         <Button variant="outline" className="w-full bg-transparent" onClick={() => onViewDetails(vehicle)}>
           <Eye className="h-4 w-4 mr-2" />
-          View Details
+          Ver Detalles
         </Button>
       </CardFooter>
     </Card>

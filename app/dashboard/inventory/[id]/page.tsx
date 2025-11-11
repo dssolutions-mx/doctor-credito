@@ -19,7 +19,7 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Vehicle Details" subtitle={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} />
+      <DashboardHeader title="Detalles del Vehículo" subtitle={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
@@ -71,14 +71,14 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
                       }
                       className="mt-2"
                     >
-                      {vehicle.status}
+                      {vehicle.status === "available" ? "Disponible" : vehicle.status === "pending" ? "Pendiente" : "Vendido"}
                     </Badge>
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3 mb-6">
                   <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground mb-1">Stock Number</p>
+                    <p className="text-sm text-muted-foreground mb-1">Número de Stock</p>
                     <p className="font-semibold text-foreground">{vehicle.stock}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
@@ -86,19 +86,19 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
                     <p className="font-semibold text-foreground font-mono text-sm">{vehicle.vin}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground mb-1">Mileage</p>
-                    <p className="font-semibold text-foreground">{vehicle.mileage.toLocaleString()} miles</p>
+                    <p className="text-sm text-muted-foreground mb-1">Kilometraje</p>
+                    <p className="font-semibold text-foreground">{vehicle.mileage.toLocaleString()} millas</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
                     <p className="text-sm text-muted-foreground mb-1">Color</p>
                     <p className="font-semibold text-foreground">{vehicle.color}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground mb-1">Year</p>
+                    <p className="text-sm text-muted-foreground mb-1">Año</p>
                     <p className="font-semibold text-foreground">{vehicle.year}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground mb-1">Make/Model</p>
+                    <p className="text-sm text-muted-foreground mb-1">Marca/Modelo</p>
                     <p className="font-semibold text-foreground">
                       {vehicle.make} {vehicle.model}
                     </p>

@@ -81,7 +81,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Lead Details" subtitle={`${lead.firstName} ${lead.lastName}`} />
+      <DashboardHeader title="Detalles del Lead" subtitle={`${lead.firstName} ${lead.lastName}`} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
@@ -232,7 +232,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <TabsContent value="notes">
               <GlassCard>
                 <CardHeader>
-                  <CardTitle>Notes</CardTitle>
+                  <CardTitle>Notas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -250,24 +250,24 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             <TabsContent value="info">
               <GlassCard>
                 <CardHeader>
-                  <CardTitle>Lead Information</CardTitle>
+                  <CardTitle>Información del Lead</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <Label className="text-sm text-muted-foreground">Assigned To</Label>
+                      <Label className="text-sm text-muted-foreground">Asignado a</Label>
                       <p className="text-sm font-medium text-foreground mt-1">{lead.assignedTo}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-muted-foreground">Created Date</Label>
+                      <Label className="text-sm text-muted-foreground">Fecha de Creación</Label>
                       <p className="text-sm font-medium text-foreground mt-1">{lead.createdAt}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-muted-foreground">Source</Label>
+                      <Label className="text-sm text-muted-foreground">Fuente</Label>
                       <p className="text-sm font-medium text-foreground mt-1">{lead.source}</p>
                     </div>
                     <div>
-                      <Label className="text-sm text-muted-foreground">Status</Label>
+                      <Label className="text-sm text-muted-foreground">Estado</Label>
                       <p className="text-sm font-medium text-foreground mt-1">{lead.status}</p>
                     </div>
                   </div>

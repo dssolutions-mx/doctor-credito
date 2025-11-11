@@ -157,7 +157,7 @@ export default function NewInventoryPage() {
                       onCheckedChange={(checked) => setPostToFacebook(checked as boolean)}
                     />
                     <Label htmlFor="facebook" className="text-sm font-normal cursor-pointer">
-                      Post to Facebook Marketplace and dealership page
+                      Publicar en Facebook Marketplace y página del concesionario
                     </Label>
                   </div>
                 </div>

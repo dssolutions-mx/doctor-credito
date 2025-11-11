@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="My Profile" subtitle="Manage your personal information and view your performance" />
+      <DashboardHeader title="Mi Perfil" subtitle="Administra tu información personal y visualiza tu rendimiento" />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-6">

@@ -5,14 +5,14 @@ const statusConfig: Record<
   LeadStatus,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" }
 > = {
-  new: { label: "New", variant: "default" },
-  contacted: { label: "Contacted", variant: "secondary" },
-  qualified: { label: "Qualified", variant: "default" },
-  appointment: { label: "Appointment", variant: "default" },
-  negotiation: { label: "Negotiation", variant: "secondary" },
-  "follow-up": { label: "Follow-up", variant: "outline" },
-  closed: { label: "Closed", variant: "default" },
-  lost: { label: "Lost", variant: "destructive" },
+  new: { label: "Nuevo", variant: "default" },
+  contacted: { label: "Contactado", variant: "secondary" },
+  qualified: { label: "Calificado", variant: "default" },
+  appointment: { label: "Cita", variant: "default" },
+  negotiation: { label: "Negociación", variant: "secondary" },
+  "follow-up": { label: "Seguimiento", variant: "outline" },
+  closed: { label: "Cerrado", variant: "default" },
+  lost: { label: "Perdido", variant: "destructive" },
 }
 
 interface LeadStatusBadgeProps {

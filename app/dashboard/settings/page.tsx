@@ -31,7 +31,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Settings" subtitle="Manage your account and preferences" />
+      <DashboardHeader title="Configuración" subtitle="Administra tu cuenta y preferencias" />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <Tabs defaultValue="profile" className="space-y-6">

@@ -64,7 +64,7 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Tasks" subtitle="Manage your daily priorities and follow-ups" />
+      <DashboardHeader title="Tareas" subtitle="Administra tus prioridades diarias y seguimientos" />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
@@ -100,14 +100,14 @@ export default function TasksPage() {
                             <div className="flex flex-wrap gap-2">
                               <Button size="sm" className="gap-2">
                                 <Phone className="h-4 w-4" />
-                                Call Now
+                                Llamar Ahora
                               </Button>
                               <Button variant="outline" size="sm" className="bg-transparent">
-                                Snooze
+                                Posponer
                               </Button>
                               <Link href={`/dashboard/leads/${task.leadId}`}>
                                 <Button variant="ghost" size="sm">
-                                  View Lead
+                                  Ver Lead
                                 </Button>
                               </Link>
                             </div>
@@ -123,7 +123,7 @@ export default function TasksPage() {
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Clock className="h-5 w-5 text-warning" />
-                  <h2 className="text-lg font-semibold text-foreground">Today's Priorities ({todayTasks.length})</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Prioridades de Hoy ({todayTasks.length})</h2>
                 </div>
                 <div className="space-y-3">
                   {todayTasks.map((task) => (
@@ -139,14 +139,14 @@ export default function TasksPage() {
                             <div className="flex flex-wrap gap-2">
                               <Button size="sm" className="gap-2">
                                 <Phone className="h-4 w-4" />
-                                Call
+                                Llamar
                               </Button>
                               <Button variant="outline" size="sm" className="bg-transparent">
-                                Text
+                                Mensaje
                               </Button>
                               <Link href={`/dashboard/leads/${task.leadId}`}>
                                 <Button variant="ghost" size="sm">
-                                  View Lead
+                                  Ver Lead
                                 </Button>
                               </Link>
                             </div>
@@ -181,10 +181,10 @@ export default function TasksPage() {
                             <div className="flex flex-wrap gap-2">
                               <Button size="sm" variant="outline" className="gap-2 bg-transparent">
                                 <Phone className="h-4 w-4" />
-                                Call
+                                Llamar
                               </Button>
                               <Button variant="ghost" size="sm">
-                                Skip
+                                Omitir
                               </Button>
                             </div>
                           </div>

@@ -32,7 +32,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Appointment Details" subtitle={appointment.customerName} />
+      <DashboardHeader title="Detalles de la Cita" subtitle={appointment.customerName} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -40,7 +40,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
             <Link href="/dashboard/appointments">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Calendar
+                Volver al Calendario
               </Button>
             </Link>
           </div>
@@ -56,17 +56,17 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
                   <div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">{appointment.customerName}</h2>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <Badge variant="default">Confirmed</Badge>
-                      <Badge variant="outline">Test Drive</Badge>
+                      <Badge variant="default">Confirmada</Badge>
+                      <Badge variant="outline">Prueba de Manejo</Badge>
                     </div>
                     <div className="space-y-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        {appointment.date} at {appointment.time}
+                        {appointment.date} a las {appointment.time}
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4" />
-                        Duration: {appointment.duration}
+                        Duración: {appointment.duration} minutos
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />

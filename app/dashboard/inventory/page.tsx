@@ -53,14 +53,14 @@ export default function InventoryPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Inventory" subtitle={`${stats.available} vehicles available`} />
+      <DashboardHeader title="Inventario" subtitle={`${stats.available} vehículos disponibles`} />
 
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Inventory</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Inventario Total</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function InventoryPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Available</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Disponibles</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-success">{stats.available}</div>
@@ -81,7 +81,7 @@ export default function InventoryPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-warning">{stats.pending}</div>
@@ -90,7 +90,7 @@ export default function InventoryPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Value</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">${(totalValue / 1000).toFixed(0)}K</div>
@@ -104,7 +104,7 @@ export default function InventoryPage() {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <Input
-                  placeholder="Search by make, model, year, or stock..."
+                  placeholder="Buscar por marca, modelo, año o stock..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10"
@@ -112,10 +112,10 @@ export default function InventoryPage() {
               </div>
               <Select value={filterMake} onValueChange={setFilterMake}>
                 <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Make" />
+                  <SelectValue placeholder="Marca" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Makes</SelectItem>
+                  <SelectItem value="all">Todas las Marcas</SelectItem>
                   {makes.map((make) => (
                     <SelectItem key={make} value={make}>
                       {make}
@@ -125,18 +125,20 @@ export default function InventoryPage() {
               </Select>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="sold">Sold</SelectItem>
+                  <SelectItem value="all">Todos los Estados</SelectItem>
+                  <SelectItem value="available">Disponible</SelectItem>
+                  <SelectItem value="pending">Pendiente</SelectItem>
+                  <SelectItem value="sold">Vendido</SelectItem>
                 </SelectContent>
               </Select>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vehicle
+              <Button asChild>
+                <Link href="/dashboard/inventory/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar Vehículo
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -153,7 +155,7 @@ export default function InventoryPage() {
           <GlassCard>
             <CardContent className="py-12 text-center">
               <Car className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No vehicles found matching your filters</p>
+              <p className="text-muted-foreground">No se encontraron vehículos que coincidan con tus filtros</p>
             </CardContent>
           </GlassCard>
         )}
