@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { RoleProvider } from "@/lib/role-context"
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function ReportsLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleProvider>
       <div className="flex h-screen overflow-hidden">
