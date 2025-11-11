@@ -43,7 +43,7 @@ export default function ActiveCallPage({ params }: { params: Promise<{ id: strin
 
   const handleEndCall = () => {
     // Navigate to call logging
-    router.push(`/dashboard/leads/${lead.id}?showCallModal=true`)
+    router.push(`/leads/${lead.id}?showCallModal=true`)
   }
 
   return (

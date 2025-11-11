@@ -40,7 +40,7 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
     // Simulate save
     setTimeout(() => {
       setLoading(false)
-      router.push(`/dashboard/leads/${id}`)
+      router.push(`/leads/${id}`)
     }, 1000)
   }
 
@@ -51,10 +51,10 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="mb-4">
-            <Link href={`/dashboard/leads/${id}`}>
+            <Link href={`/leads/${id}`}>
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Lead
+                Volver al Lead
               </Button>
             </Link>
           </div>
@@ -201,7 +201,7 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
                   <Button type="submit" disabled={loading}>
                     {loading ? "Guardando..." : "Guardar Cambios"}
                   </Button>
-                  <Link href={`/dashboard/leads/${id}`}>
+                  <Link href={`/leads/${id}`}>
                     <Button type="button" variant="outline" className="bg-transparent">
                       Cancelar
                     </Button>

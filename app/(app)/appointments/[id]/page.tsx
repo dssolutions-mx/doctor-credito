@@ -37,10 +37,10 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="mb-4">
-            <Link href="/dashboard/appointments">
+            <Link href="/appointments">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Volver al Calendario
+                Volver a Citas
               </Button>
             </Link>
           </div>
@@ -85,7 +85,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
                     <Mail className="h-4 w-4" />
                     Enviar Email
                   </Button>
-                  <Link href={`/dashboard/appointments/${id}/edit`}>
+                  <Link href={`/appointments/${id}/edit`}>
                     <Button variant="outline" className="gap-2 w-full bg-transparent">
                       <Calendar className="h-4 w-4" />
                       Reprogramar
@@ -120,7 +120,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
                   </a>
                 </div>
                 <div className="pt-3 border-t border-border">
-                  <Link href={`/dashboard/leads/${appointment.leadId}`}>
+                  <Link href={`/leads/${appointment.leadId}`}>
                     <Button variant="outline" size="sm" className="w-full bg-transparent">
                       Ver Perfil del Lead
                     </Button>
@@ -173,7 +173,7 @@ export default function AppointmentDetailPage({ params }: { params: Promise<{ id
                 <Button variant="outline" className="bg-transparent text-warning">
                   Marcar No Presente
                 </Button>
-                <Link href={`/dashboard/appointments/${id}/edit`}>
+                <Link href={`/appointments/${id}/edit`}>
                   <Button variant="outline" className="w-full bg-transparent">
                     Reprogramar
                   </Button>

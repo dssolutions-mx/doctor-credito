@@ -17,14 +17,14 @@ import { useRole } from "@/lib/role-context"
 
 const agentNavigation = [
   { name: "Inicio", href: "/dashboard", icon: Home },
-  { name: "Tareas", href: "/dashboard/tasks", icon: ClipboardList },
-  { name: "Leads", href: "/dashboard/leads", icon: Users },
-  { name: "Pipeline", href: "/dashboard/leads/pipeline", icon: Kanban },
-  { name: "Citas", href: "/dashboard/appointments", icon: Calendar },
-  { name: "Inventario", href: "/dashboard/inventory", icon: Car },
-  { name: "Reportes", href: "/dashboard/reports", icon: BarChart3 },
-  { name: "Perfil", href: "/dashboard/profile", icon: User },
-  { name: "Configuración", href: "/dashboard/settings", icon: Settings },
+  { name: "Tareas", href: "/tasks", icon: ClipboardList },
+  { name: "Leads", href: "/leads", icon: Users },
+  { name: "Pipeline", href: "/leads/pipeline", icon: Kanban },
+  { name: "Citas", href: "/appointments", icon: Calendar },
+  { name: "Inventario", href: "/inventory", icon: Car },
+  { name: "Reportes", href: "/reports", icon: BarChart3 },
+  { name: "Perfil", href: "/profile", icon: User },
+  { name: "Configuración", href: "/settings", icon: Settings },
 ]
 
 const dealerNavigation = [

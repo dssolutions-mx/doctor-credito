@@ -162,17 +162,17 @@ export default function DashboardPage() {
                   <CardTitle>Leads Recientes</CardTitle>
                   <CardDescription>Tus nuevas oportunidades</CardDescription>
                 </div>
-                <Link href="/dashboard/leads">
-                  <Button variant="outline" size="sm">
-                    Ver todos
-                  </Button>
-                </Link>
+                        <Link href="/leads">
+                          <Button variant="outline" size="sm">
+                            Ver todos
+                          </Button>
+                        </Link>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentLeads.map((lead) => (
-                  <Link key={lead.id} href={`/dashboard/leads/${lead.id}`}>
+                      {recentLeads.map((lead) => (
+                          <Link key={lead.id} href={`/leads/${lead.id}`}>
                   <div
                     className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
                   >
@@ -220,17 +220,17 @@ export default function DashboardPage() {
                   <CardTitle>Citas de Hoy</CardTitle>
                   <CardDescription>8 programadas para hoy</CardDescription>
                 </div>
-                <Link href="/dashboard/appointments">
-                  <Button variant="outline" size="sm">
-                    Ver calendario
-                  </Button>
-                </Link>
+                        <Link href="/appointments">
+                          <Button variant="outline" size="sm">
+                            Ver calendario
+                          </Button>
+                        </Link>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {todayAppointments.map((appointment) => (
-                  <Link key={appointment.id} href={`/dashboard/appointments/${appointment.id}`}>
+                      {todayAppointments.map((appointment) => (
+                          <Link key={appointment.id} href={`/appointments/${appointment.id}`}>
                   <div
                     className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
                   >
@@ -270,18 +270,18 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Link href="/dashboard/leads/new">
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
-                  <Users className="h-5 w-5" />
-                  <span>Agregar Nuevo Lead</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/appointments/book">
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
-                  <Calendar className="h-5 w-5" />
-                  <span>Agendar Cita</span>
-                </Button>
-              </Link>
+                      <Link href="/leads/new">
+                        <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                          <Users className="h-5 w-5" />
+                          <span>Agregar Nuevo Lead</span>
+                        </Button>
+                      </Link>
+                      <Link href="/appointments/book">
+                        <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                          <Calendar className="h-5 w-5" />
+                          <span>Agendar Cita</span>
+                        </Button>
+                      </Link>
               <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
                 <Phone className="h-5 w-5" />
                 <span>Registrar Llamada</span>

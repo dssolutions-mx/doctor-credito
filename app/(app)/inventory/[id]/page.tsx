@@ -24,10 +24,10 @@ export default function VehicleDetailPage({ params }: { params: Promise<{ id: st
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/dashboard/inventory">
+            <Link href="/inventory">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Volver a Inventario
+                Volver al Inventario
               </Button>
             </Link>
             <div className="flex gap-2">

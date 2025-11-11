@@ -149,7 +149,7 @@ export default function PipelinePage() {
 
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1 h-7 text-xs bg-transparent" asChild>
-                          <Link href={`/dashboard/leads/${lead.id}`}>Ver</Link>
+                          <Link href={`/leads/${lead.id}`}>Ver</Link>
                         </Button>
                         <Button size="sm" className="h-7 text-xs flex-shrink-0">
                           <Phone className="h-3 w-3" />

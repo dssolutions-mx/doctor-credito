@@ -86,7 +86,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="mb-4">
-            <Link href="/dashboard/leads">
+            <Link href="/leads">
               <Button variant="ghost" size="sm" className="gap-2 rounded-2xl">
                 <ArrowLeft className="h-4 w-4" />
                 Volver a Leads
@@ -142,7 +142,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     <Mail className="h-4 w-4" />
                     Enviar Correo
                   </Button>
-                  <Link href="/dashboard/appointments/book">
+                  <Link href="/appointments/book">
                     <Button variant="outline" className="gap-2 w-full h-11 bg-transparent rounded-2xl">
                       <Calendar className="h-4 w-4" />
                       Agendar Cita

@@ -87,12 +87,12 @@ export default function LeadsPage() {
                   <SelectItem value="referral">Referido</SelectItem>
                 </SelectContent>
               </Select>
-              <Button asChild>
-                <Link href="/dashboard/leads/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Lead
-                </Link>
-              </Button>
+                      <Button asChild>
+                        <Link href="/leads/new">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Nuevo Lead
+                        </Link>
+                      </Button>
             </div>
           </CardContent>
         </GlassCard>

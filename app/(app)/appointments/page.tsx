@@ -15,19 +15,19 @@ import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 
 const typeLabels = {
-  test_drive: "Test Drive",
-  credit_approval: "Credit Approval",
-  delivery: "Vehicle Delivery",
-  trade_in: "Trade-in Evaluation",
-  consultation: "Consultation",
+  test_drive: "Prueba de Manejo",
+  credit_approval: "Aprobación de Crédito",
+  delivery: "Entrega de Vehículo",
+  trade_in: "Evaluación de Cambio",
+  consultation: "Consulta",
 }
 
 const statusConfig = {
-  pending: { label: "Pending", variant: "outline" as const },
-  confirmed: { label: "Confirmed", variant: "default" as const },
-  completed: { label: "Completed", variant: "secondary" as const },
-  cancelled: { label: "Cancelled", variant: "destructive" as const },
-  no_show: { label: "No Show", variant: "destructive" as const },
+  pending: { label: "Pendiente", variant: "outline" as const },
+  confirmed: { label: "Confirmado", variant: "default" as const },
+  completed: { label: "Completado", variant: "secondary" as const },
+  cancelled: { label: "Cancelado", variant: "destructive" as const },
+  no_show: { label: "No Asistió", variant: "destructive" as const },
 }
 
 export default function AppointmentsPage() {
@@ -54,7 +54,7 @@ export default function AppointmentsPage() {
     <div className="flex flex-col h-full">
       <DashboardHeader title="Citas" subtitle={`${stats.total} citas programadas`} />
 
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 px-8 pt-10 pb-8 space-y-8 overflow-y-auto">
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <GlassCard>
@@ -68,7 +68,7 @@ export default function AppointmentsPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Today</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Hoy</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">{stats.today}</div>
@@ -77,7 +77,7 @@ export default function AppointmentsPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Confirmadas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-success">{stats.confirmed}</div>
@@ -86,7 +86,7 @@ export default function AppointmentsPage() {
 
           <GlassCard>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-warning">{stats.pending}</div>
@@ -100,9 +100,9 @@ export default function AppointmentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Calendario</CardTitle>
-                <CardDescription>Manage your appointments and calendar</CardDescription>
+                <CardDescription>Administra tus citas y calendario</CardDescription>
               </div>
-              <Button>
+              <Button className="rounded-2xl h-11">
                 <Plus className="h-4 w-4 mr-2" />
                 Nueva Cita
               </Button>
@@ -113,11 +113,11 @@ export default function AppointmentsPage() {
               <TabsList>
                 <TabsTrigger value="calendar" className="gap-2">
                   <CalendarIcon className="h-4 w-4" />
-                  Calendar View
+                  Vista de Calendario
                 </TabsTrigger>
                 <TabsTrigger value="list" className="gap-2">
                   <List className="h-4 w-4" />
-                  List View
+                  Vista de Lista
                 </TabsTrigger>
               </TabsList>
 

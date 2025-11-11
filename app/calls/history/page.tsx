@@ -149,9 +149,9 @@ export default function CallHistoryPage() {
                         <Phone className="h-4 w-4" />
                         Call Again
                       </Button>
-                      <Link href={`/dashboard/leads/${call.leadId}`}>
+                      <Link href={`/leads/${call.leadId}`}>
                         <Button size="sm" variant="ghost">
-                          View Lead
+                          Ver Lead
                         </Button>
                       </Link>
                     </div>

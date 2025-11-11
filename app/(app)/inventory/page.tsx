@@ -136,7 +136,7 @@ export default function InventoryPage() {
                 </SelectContent>
               </Select>
               <Button asChild>
-                <Link href="/dashboard/inventory/new">
+                <Link href="/inventory/new">
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Vehículo
                 </Link>

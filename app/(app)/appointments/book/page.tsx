@@ -31,7 +31,7 @@ export default function BookAppointmentPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Redirect to appointments page
-    router.push("/dashboard/appointments")
+    router.push("/appointments")
   }
 
   const timeSlots = [
@@ -53,7 +53,7 @@ export default function BookAppointmentPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="mb-4">
-            <Link href="/dashboard/appointments">
+            <Link href="/appointments">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Volver a Citas

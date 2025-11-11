@@ -27,7 +27,7 @@ export default function NewLeadPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Redirect to leads page
-    router.push("/dashboard/leads")
+    router.push("/leads")
   }
 
   return (
@@ -37,7 +37,7 @@ export default function NewLeadPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="mb-4">
-            <Link href="/dashboard/leads">
+            <Link href="/leads">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Volver a Leads

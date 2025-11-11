@@ -14,17 +14,17 @@ export default function TasksPage() {
     {
       id: "1",
       type: "call",
-      title: "Call Maria Lopez",
-      description: "Re: 2019 Honda Civic - No answer",
-      dueTime: "2 hrs overdue",
+      title: "Llamar a Maria Lopez",
+      description: "Re: 2019 Honda Civic - Sin respuesta",
+      dueTime: "2 hrs atrasada",
       priority: "urgent",
       leadId: "1",
     },
     {
       id: "2",
       type: "confirm",
-      title: "Confirm: Juan Perez",
-      description: "Tomorrow 2pm - 2020 Toyota Camry",
+      title: "Confirmar: Juan Perez",
+      description: "Mañana 2pm - 2020 Toyota Camry",
       dueTime: "1 hr",
       priority: "urgent",
       leadId: "2",
@@ -35,16 +35,16 @@ export default function TasksPage() {
     {
       id: "3",
       type: "call",
-      title: "Call new lead: Carlos Martinez",
-      description: "Re: 2021 Ford F-150 - 12 mins ago",
+      title: "Llamar nuevo lead: Carlos Martinez",
+      description: "Re: 2021 Ford F-150 - hace 12 mins",
       priority: "high",
       leadId: "3",
     },
     {
       id: "4",
       type: "follow-up",
-      title: "Follow up: Ana Rodriguez",
-      description: "No-show yesterday - Reschedule",
+      title: "Seguimiento: Ana Rodriguez",
+      description: "No asistió ayer - Reagendar",
       priority: "high",
       leadId: "4",
     },
@@ -54,9 +54,9 @@ export default function TasksPage() {
     {
       id: "5",
       type: "check-in",
-      title: "Check in: Roberto Silva",
-      description: "Weekly follow-up - Still shopping",
-      dueDate: "Tomorrow",
+      title: "Revisar: Roberto Silva",
+      description: "Seguimiento semanal - Aún buscando",
+      dueDate: "Mañana",
       priority: "medium",
       leadId: "5",
     },
@@ -66,14 +66,14 @@ export default function TasksPage() {
     <div className="flex flex-col h-full">
       <DashboardHeader title="Tareas" subtitle="Administra tus prioridades diarias y seguimientos" />
 
-      <div className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
+        <div className="max-w-5xl mx-auto space-y-8">
           <Tabs defaultValue="all" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="all">All Tasks</TabsTrigger>
-              <TabsTrigger value="calls">Calls</TabsTrigger>
-              <TabsTrigger value="appointments">Appointments</TabsTrigger>
-              <TabsTrigger value="followups">Follow-ups</TabsTrigger>
+              <TabsTrigger value="all">Todas las Tareas</TabsTrigger>
+              <TabsTrigger value="calls">Llamadas</TabsTrigger>
+              <TabsTrigger value="appointments">Citas</TabsTrigger>
+              <TabsTrigger value="followups">Seguimientos</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all" className="space-y-6">
@@ -81,7 +81,7 @@ export default function TasksPage() {
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <AlertCircle className="h-5 w-5 text-destructive" />
-                  <h2 className="text-lg font-semibold text-foreground">Urgent ({urgentTasks.length})</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Urgente ({urgentTasks.length})</h2>
                 </div>
                 <div className="space-y-3">
                   {urgentTasks.map((task) => (
@@ -98,15 +98,15 @@ export default function TasksPage() {
                             </div>
                             <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
                             <div className="flex flex-wrap gap-2">
-                              <Button size="sm" className="gap-2">
+                              <Button size="sm" className="gap-2 rounded-2xl">
                                 <Phone className="h-4 w-4" />
                                 Llamar Ahora
                               </Button>
-                              <Button variant="outline" size="sm" className="bg-transparent">
+                              <Button variant="outline" size="sm" className="bg-transparent rounded-2xl">
                                 Posponer
                               </Button>
-                              <Link href={`/dashboard/leads/${task.leadId}`}>
-                                <Button variant="ghost" size="sm">
+                              <Link href={`/leads/${task.leadId}`}>
+                                <Button variant="ghost" size="sm" className="rounded-2xl">
                                   Ver Lead
                                 </Button>
                               </Link>
@@ -137,15 +137,15 @@ export default function TasksPage() {
                             </div>
                             <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
                             <div className="flex flex-wrap gap-2">
-                              <Button size="sm" className="gap-2">
+                              <Button size="sm" className="gap-2 rounded-2xl">
                                 <Phone className="h-4 w-4" />
                                 Llamar
                               </Button>
-                              <Button variant="outline" size="sm" className="bg-transparent">
+                              <Button variant="outline" size="sm" className="bg-transparent rounded-2xl">
                                 Mensaje
                               </Button>
-                              <Link href={`/dashboard/leads/${task.leadId}`}>
-                                <Button variant="ghost" size="sm">
+                              <Link href={`/leads/${task.leadId}`}>
+                                <Button variant="ghost" size="sm" className="rounded-2xl">
                                   Ver Lead
                                 </Button>
                               </Link>
@@ -162,7 +162,7 @@ export default function TasksPage() {
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Calendar className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">Upcoming ({upcomingTasks.length})</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Próximas ({upcomingTasks.length})</h2>
                 </div>
                 <div className="space-y-3">
                   {upcomingTasks.map((task) => (
@@ -179,11 +179,11 @@ export default function TasksPage() {
                             </div>
                             <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
                             <div className="flex flex-wrap gap-2">
-                              <Button size="sm" variant="outline" className="gap-2 bg-transparent">
+                              <Button size="sm" variant="outline" className="gap-2 bg-transparent rounded-2xl">
                                 <Phone className="h-4 w-4" />
                                 Llamar
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="rounded-2xl">
                                 Omitir
                               </Button>
                             </div>
@@ -197,15 +197,15 @@ export default function TasksPage() {
             </TabsContent>
 
             <TabsContent value="calls">
-              <p className="text-sm text-muted-foreground">Call tasks filtered view...</p>
+              <p className="text-sm text-muted-foreground">Vista filtrada de tareas de llamadas...</p>
             </TabsContent>
 
             <TabsContent value="appointments">
-              <p className="text-sm text-muted-foreground">Appointment tasks filtered view...</p>
+              <p className="text-sm text-muted-foreground">Vista filtrada de tareas de citas...</p>
             </TabsContent>
 
             <TabsContent value="followups">
-              <p className="text-sm text-muted-foreground">Follow-up tasks filtered view...</p>
+              <p className="text-sm text-muted-foreground">Vista filtrada de seguimientos...</p>
             </TabsContent>
           </Tabs>
         </div>

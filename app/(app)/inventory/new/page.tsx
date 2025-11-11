@@ -29,7 +29,7 @@ export default function NewInventoryPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     // Redirect to inventory page
-    router.push("/dashboard/inventory")
+    router.push("/inventory")
   }
 
   return (
@@ -39,10 +39,10 @@ export default function NewInventoryPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           <div className="mb-4">
-            <Link href="/dashboard/inventory">
+            <Link href="/inventory">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Back to Inventory
+                Volver al Inventario
               </Button>
             </Link>
           </div>
