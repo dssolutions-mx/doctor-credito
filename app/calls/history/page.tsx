@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, Search, Filter } from "lucide-react"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
+
 export default function CallHistoryPage() {
   const calls = [
     {
