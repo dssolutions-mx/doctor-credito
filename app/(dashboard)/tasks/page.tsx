@@ -5,62 +5,96 @@ import { GlassCard } from "@/components/glass-card"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Phone, Clock, AlertCircle, CheckCircle2, Calendar, User } from "lucide-react"
+import { Phone, Clock, AlertCircle, CheckCircle2, Calendar } from "lucide-react"
 import Link from "next/link"
+import { useTasks } from "@/hooks/use-supabase-data"
+import { formatDistanceToNow, isPast, isToday } from "date-fns"
+import { es } from "date-fns/locale"
 
 export default function TasksPage() {
-  const urgentTasks = [
-    {
-      id: "1",
-      type: "call",
-      title: "Llamar a Maria Lopez",
-      description: "Re: 2019 Honda Civic - Sin respuesta",
-      dueTime: "2 hrs atrasada",
-      priority: "urgent",
-      leadId: "1",
-    },
-    {
-      id: "2",
-      type: "confirm",
-      title: "Confirmar: Juan Perez",
-      description: "Mañana 2pm - 2020 Toyota Camry",
-      dueTime: "1 hr",
-      priority: "urgent",
-      leadId: "2",
-    },
-  ]
+  const { tasks: allTasks, loading } = useTasks('pendiente')
 
-  const todayTasks = [
-    {
-      id: "3",
-      type: "call",
-      title: "Llamar nuevo lead: Carlos Martinez",
-      description: "Re: 2021 Ford F-150 - hace 12 mins",
-      priority: "high",
-      leadId: "3",
-    },
-    {
-      id: "4",
-      type: "follow-up",
-      title: "Seguimiento: Ana Rodriguez",
-      description: "No asistió ayer - Reagendar",
-      priority: "high",
-      leadId: "4",
-    },
-  ]
+  // Categorize tasks
+  const urgentTasks = (allTasks || []).filter(t => {
+    if (!t.due_at) return false
+    const dueDate = new Date(t.due_at)
+    return isPast(dueDate) || t.priority === 'urgente'
+  })
 
-  const upcomingTasks = [
-    {
-      id: "5",
-      type: "check-in",
-      title: "Revisar: Roberto Silva",
-      description: "Seguimiento semanal - Aún buscando",
-      dueDate: "Mañana",
-      priority: "medium",
-      leadId: "5",
-    },
-  ]
+  const todayTasks = (allTasks || []).filter(t => {
+    if (!t.due_at) return false
+    return isToday(new Date(t.due_at)) && t.priority !== 'urgente'
+  })
+
+  const upcomingTasks = (allTasks || []).filter(t => {
+    if (!t.due_at) return true
+    const dueDate = new Date(t.due_at)
+    return !isToday(dueDate) && !isPast(dueDate) && t.priority !== 'urgente'
+  })
+
+  const priorityColors: Record<string, string> = {
+    urgente: "border-destructive",
+    alta: "border-warning",
+    media: "border-primary",
+    baja: "border-muted",
+  }
+
+  const renderTask = (task: any, variant: 'urgent' | 'today' | 'upcoming') => {
+    const dueText = task.due_at
+      ? formatDistanceToNow(new Date(task.due_at), { addSuffix: true, locale: es })
+      : 'Sin fecha límite'
+
+    const borderColor = priorityColors[task.priority || 'media'] || 'border-primary'
+
+    return (
+      <GlassCard key={task.id} className={`border-l-4 ${borderColor}`}>
+        <CardContent className="pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
+                {variant === 'urgent' && (
+                  <Badge variant="destructive" className="text-xs">
+                    {isPast(new Date(task.due_at)) ? 'Vencida' : 'Urgente'}
+                  </Badge>
+                )}
+                {task.auto_generated && (
+                  <Badge variant="outline" className="text-xs">
+                    Auto
+                  </Badge>
+                )}
+              </div>
+              {task.description && (
+                <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
+              )}
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+                {task.lead?.name && (
+                  <span>Lead: {task.lead.name}</span>
+                )}
+                <span>•</span>
+                <span className="capitalize">{task.task_type || 'Tarea'}</span>
+                <span>•</span>
+                <span>{dueText}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" className="gap-2 rounded-2xl">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Completar
+                </Button>
+                {task.lead_id && (
+                  <Link href={`/leads/${task.lead_id}`}>
+                    <Button variant="outline" size="sm" className="rounded-2xl">
+                      Ver Lead
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </GlassCard>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -68,146 +102,66 @@ export default function TasksPage() {
 
       <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-8">
-          <Tabs defaultValue="all" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="all">Todas las Tareas</TabsTrigger>
-              <TabsTrigger value="calls">Llamadas</TabsTrigger>
-              <TabsTrigger value="appointments">Citas</TabsTrigger>
-              <TabsTrigger value="followups">Seguimientos</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="all" className="space-y-6">
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">Cargando tareas...</div>
+          ) : (allTasks || []).length === 0 ? (
+            <GlassCard>
+              <CardContent className="p-12 text-center">
+                <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">¡Todo listo!</h3>
+                <p className="text-muted-foreground">
+                  No tienes tareas pendientes en este momento.
+                </p>
+              </CardContent>
+            </GlassCard>
+          ) : (
+            <>
               {/* Urgent Tasks */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertCircle className="h-5 w-5 text-destructive" />
-                  <h2 className="text-lg font-semibold text-foreground">Urgente ({urgentTasks.length})</h2>
+              {urgentTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Urgente ({urgentTasks.length})
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
+                    {urgentTasks.map((task) => renderTask(task, 'urgent'))}
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {urgentTasks.map((task) => (
-                    <GlassCard key={task.id} className="border-l-4 border-destructive">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Phone className="h-5 w-5 text-destructive" />
-                              <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
-                              <Badge variant="destructive" className="text-xs">
-                                {task.dueTime}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button size="sm" className="gap-2 rounded-2xl">
-                                <Phone className="h-4 w-4" />
-                                Llamar Ahora
-                              </Button>
-                              <Button variant="outline" size="sm" className="bg-transparent rounded-2xl">
-                                Posponer
-                              </Button>
-                              <Link href={`/leads/${task.leadId}`}>
-                                <Button variant="ghost" size="sm" className="rounded-2xl">
-                                  Ver Lead
-                                </Button>
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </GlassCard>
-                  ))}
-                </div>
-              </div>
+              )}
 
-              {/* Today's Priorities */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="h-5 w-5 text-warning" />
-                  <h2 className="text-lg font-semibold text-foreground">Prioridades de Hoy ({todayTasks.length})</h2>
+              {/* Today's Tasks */}
+              {todayTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="h-5 w-5 text-warning" />
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Prioridades de Hoy ({todayTasks.length})
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
+                    {todayTasks.map((task) => renderTask(task, 'today'))}
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {todayTasks.map((task) => (
-                    <GlassCard key={task.id} className="border-l-4 border-warning">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <User className="h-5 w-5 text-warning" />
-                              <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button size="sm" className="gap-2 rounded-2xl">
-                                <Phone className="h-4 w-4" />
-                                Llamar
-                              </Button>
-                              <Button variant="outline" size="sm" className="bg-transparent rounded-2xl">
-                                Mensaje
-                              </Button>
-                              <Link href={`/leads/${task.leadId}`}>
-                                <Button variant="ghost" size="sm" className="rounded-2xl">
-                                  Ver Lead
-                                </Button>
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </GlassCard>
-                  ))}
+              )}
+
+              {/* Upcoming Tasks */}
+              {upcomingTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Próximas ({upcomingTasks.length})
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
+                    {upcomingTasks.map((task) => renderTask(task, 'upcoming'))}
+                  </div>
                 </div>
-              </div>
-
-              {/* Upcoming */}
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">Próximas ({upcomingTasks.length})</h2>
-                </div>
-                <div className="space-y-3">
-                  {upcomingTasks.map((task) => (
-                    <GlassCard key={task.id}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <CheckCircle2 className="h-5 w-5 text-primary" />
-                              <h3 className="text-base font-semibold text-foreground">{task.title}</h3>
-                              <Badge variant="outline" className="text-xs">
-                                {task.dueDate}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-4">{task.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Button size="sm" variant="outline" className="gap-2 bg-transparent rounded-2xl">
-                                <Phone className="h-4 w-4" />
-                                Llamar
-                              </Button>
-                              <Button variant="ghost" size="sm" className="rounded-2xl">
-                                Omitir
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </GlassCard>
-                  ))}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="calls">
-              <p className="text-sm text-muted-foreground">Vista filtrada de tareas de llamadas...</p>
-            </TabsContent>
-
-            <TabsContent value="appointments">
-              <p className="text-sm text-muted-foreground">Vista filtrada de tareas de citas...</p>
-            </TabsContent>
-
-            <TabsContent value="followups">
-              <p className="text-sm text-muted-foreground">Vista filtrada de seguimientos...</p>
-            </TabsContent>
-          </Tabs>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
