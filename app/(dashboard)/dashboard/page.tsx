@@ -1,3 +1,5 @@
+"use client"
+
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -5,127 +7,95 @@ import { Users, Calendar, Car, TrendingUp, Phone, MessageSquare, CheckCircle2, C
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
-// Mock data
-const stats = [
-  {
-    title: "Leads Activos",
-    value: "24",
-    change: "+12%",
-    trend: "up",
-    icon: Users,
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-  },
-  {
-    title: "Citas de Hoy",
-    value: "8",
-    change: "+2",
-    trend: "up",
-    icon: Calendar,
-    color: "text-accent",
-    bgColor: "bg-accent/10",
-  },
-  {
-    title: "Vehículos Disponibles",
-    value: "156",
-    change: "12 nuevos",
-    trend: "neutral",
-    icon: Car,
-    color: "text-success",
-    bgColor: "bg-success/10",
-  },
-  {
-    title: "Tasa de Conversión",
-    value: "32%",
-    change: "+5%",
-    trend: "up",
-    icon: TrendingUp,
-    color: "text-warning",
-    bgColor: "bg-warning/10",
-  },
-]
-
-const recentLeads = [
-  {
-    id: "1",
-    name: "Carlos Martinez",
-    source: "Facebook",
-    vehicle: "2024 Honda Civic",
-    status: "new",
-    time: "hace 5 min",
-    priority: "high",
-  },
-  {
-    id: "2",
-    name: "Ana Gutierrez",
-    source: "Facebook",
-    vehicle: "2023 Toyota Camry",
-    status: "contacted",
-    time: "hace 23 min",
-    priority: "medium",
-  },
-  {
-    id: "3",
-    name: "Juan Perez",
-    source: "Website",
-    vehicle: "2024 Ford F-150",
-    status: "appointment",
-    time: "hace 1 hora",
-    priority: "high",
-  },
-  {
-    id: "4",
-    name: "Maria Lopez",
-    source: "Facebook",
-    vehicle: "2023 Nissan Altima",
-    status: "follow-up",
-    time: "hace 2 horas",
-    priority: "low",
-  },
-]
-
-const todayAppointments = [
-  {
-    id: "1",
-    customer: "Roberto Silva",
-    vehicle: "2024 Honda Accord",
-    time: "10:00 AM",
-    type: "Prueba de Manejo",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    customer: "Patricia Ruiz",
-    vehicle: "2023 Toyota RAV4",
-    time: "2:00 PM",
-    type: "Aprobación de Crédito",
-    status: "confirmed",
-  },
-  {
-    id: "3",
-    customer: "Luis Fernandez",
-    vehicle: "2024 Chevrolet Silverado",
-    time: "4:30 PM",
-    type: "Entrega",
-    status: "pending",
-  },
-]
+import { useLeads, useAppointments } from "@/hooks/use-supabase-data"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
 
 const statusConfig = {
-  new: { label: "Nuevo", variant: "default" as const, color: "bg-primary" },
-  contacted: { label: "Contactado", variant: "secondary" as const, color: "bg-accent" },
-  appointment: { label: "Cita", variant: "default" as const, color: "bg-success" },
-  "follow-up": { label: "Seguimiento", variant: "outline" as const, color: "bg-warning" },
+  nuevo: { label: "Nuevo", variant: "default" as const, color: "bg-primary" },
+  contactado: { label: "Contactado", variant: "secondary" as const, color: "bg-accent" },
+  cita_programada: { label: "Cita", variant: "default" as const, color: "bg-success" },
+  negociacion: { label: "Negociación", variant: "outline" as const, color: "bg-warning" },
+  cerrado: { label: "Cerrado", variant: "default" as const, color: "bg-success" },
+  perdido: { label: "Perdido", variant: "outline" as const, color: "bg-muted" },
 }
 
-const priorityConfig = {
-  high: { color: "bg-destructive", label: "Alta" },
-  medium: { color: "bg-warning", label: "Media" },
-  low: { color: "bg-muted", label: "Baja" },
+const urgencyConfig = {
+  alta: { color: "bg-destructive", label: "Alta" },
+  media: { color: "bg-warning", label: "Media" },
+  baja: { color: "bg-muted", label: "Baja" },
+}
+
+const appointmentTypeLabels: Record<string, string> = {
+  showroom: "Visita Agencia",
+  phone: "Llamada",
+  video: "Video",
+  test_drive: "Prueba de Manejo",
+  credit_approval: "Aprobación de Crédito",
+  delivery: "Entrega",
 }
 
 export default function DashboardPage() {
+  const { leads, loading: leadsLoading } = useLeads()
+  const { appointments, loading: appointmentsLoading } = useAppointments()
+
+  // Calculate stats from real data
+  const activeLeads = leads?.filter(l => !['cerrado', 'perdido'].includes(l.status || '')).length || 0
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayAppointmentsData = appointments?.filter(a => {
+    if (!a.scheduled_at) return false
+    const apptDate = new Date(a.scheduled_at)
+    apptDate.setHours(0, 0, 0, 0)
+    return apptDate.getTime() === today.getTime()
+  }) || []
+
+  const closedLeads = leads?.filter(l => l.status === 'cerrado').length || 0
+  const totalLeads = leads?.length || 0
+  const conversionRate = totalLeads > 0 ? Math.round((closedLeads / totalLeads) * 100) : 0
+
+  // Recent leads (last 4)
+  const recentLeads = leads?.slice(0, 4) || []
+
+  const stats = [
+    {
+      title: "Leads Activos",
+      value: activeLeads.toString(),
+      change: `${totalLeads} total`,
+      trend: "up",
+      icon: Users,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+    {
+      title: "Citas de Hoy",
+      value: todayAppointmentsData.length.toString(),
+      change: `${appointments?.length || 0} total`,
+      trend: "up",
+      icon: Calendar,
+      color: "text-accent",
+      bgColor: "bg-accent/10",
+    },
+    {
+      title: "Conversiones",
+      value: closedLeads.toString(),
+      change: "este mes",
+      trend: "neutral",
+      icon: Car,
+      color: "text-success",
+      bgColor: "bg-success/10",
+    },
+    {
+      title: "Tasa de Conversión",
+      value: `${conversionRate}%`,
+      change: `${totalLeads} leads`,
+      trend: "up",
+      icon: TrendingUp,
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+    },
+  ]
   return (
     <div className="flex flex-col h-full">
       <DashboardHeader title="Dashboard" subtitle="¡Bienvenida de nuevo, Maria! Esto es lo que está pasando hoy." />
@@ -170,45 +140,59 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                      {recentLeads.map((lead) => (
-                          <Link key={lead.id} href={`/leads/${lead.id}`}>
-                  <div
-                    className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">{lead.name}</p>
-                        <div
-                          className={`w-2 h-2 rounded-full ${priorityConfig[lead.priority as keyof typeof priorityConfig].color}`}
-                        />
+              {leadsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+              ) : recentLeads.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No hay leads recientes</div>
+              ) : (
+                <div className="space-y-3">
+                  {recentLeads.map((lead) => (
+                    <Link key={lead.id} href={`/leads/${lead.id}`}>
+                      <div className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">
+                              {lead.name || lead.phone || 'Sin nombre'}
+                            </p>
+                            {lead.urgency_level && urgencyConfig[lead.urgency_level as keyof typeof urgencyConfig] && (
+                              <div className={`w-2 h-2 rounded-full ${urgencyConfig[lead.urgency_level as keyof typeof urgencyConfig].color}`} />
+                            )}
+                          </div>
+                          <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">
+                            {lead.vehicle_interest || 'Sin vehículo específico'}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {lead.status && statusConfig[lead.status as keyof typeof statusConfig] && (
+                              <Badge
+                                variant={statusConfig[lead.status as keyof typeof statusConfig].variant}
+                                className="text-[13px] rounded-full"
+                              >
+                                {statusConfig[lead.status as keyof typeof statusConfig].label}
+                              </Badge>
+                            )}
+                            <span className="text-[13px] leading-[18px] text-muted-foreground capitalize">
+                              {lead.source || 'Facebook'}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="text-[13px] leading-[18px] text-muted-foreground whitespace-nowrap">
+                            {lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: true, locale: es }) : 'Reciente'}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">{lead.vehicle}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={statusConfig[lead.status as keyof typeof statusConfig].variant}
-                          className="text-[13px] rounded-full"
-                        >
-                          {statusConfig[lead.status as keyof typeof statusConfig].label}
-                        </Badge>
-                        <span className="text-[13px] leading-[18px] text-muted-foreground">{lead.source}</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className="text-[13px] leading-[18px] text-muted-foreground whitespace-nowrap">{lead.time}</span>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  </Link>
-                ))}
-              </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </GlassCard>
 
@@ -218,46 +202,60 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Citas de Hoy</CardTitle>
-                  <CardDescription>8 programadas para hoy</CardDescription>
+                  <CardDescription>{todayAppointmentsData.length} programadas para hoy</CardDescription>
                 </div>
-                        <Link href="/appointments">
-                          <Button variant="outline" size="sm">
-                            Ver calendario
-                          </Button>
-                        </Link>
+                <Link href="/appointments">
+                  <Button variant="outline" size="sm">
+                    Ver calendario
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                      {todayAppointments.map((appointment) => (
-                          <Link key={appointment.id} href={`/appointments/${appointment.id}`}>
-                  <div
-                    className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/8 border border-primary/12">
-                      <div className="text-center">
-                        <div className="text-[15px] leading-[20px] font-semibold text-primary">{appointment.time.split(" ")[0]}</div>
-                        <div className="text-[13px] leading-[18px] text-muted-foreground">{appointment.time.split(" ")[1]}</div>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">{appointment.customer}</p>
-                        {appointment.status === "confirmed" ? (
-                          <CheckCircle2 className="h-4 w-4 text-success" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-warning" />
-                        )}
-                      </div>
-                      <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">{appointment.vehicle}</p>
-                      <Badge variant="outline" className="text-[13px] rounded-full">
-                        {appointment.type}
-                      </Badge>
-                    </div>
-                  </div>
-                  </Link>
-                ))}
-              </div>
+              {appointmentsLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+              ) : todayAppointmentsData.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">No hay citas programadas para hoy</div>
+              ) : (
+                <div className="space-y-3">
+                  {todayAppointmentsData.slice(0, 3).map((appointment) => {
+                    const apptDate = appointment.scheduled_at ? new Date(appointment.scheduled_at) : null
+                    const timeStr = apptDate ? apptDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '--:--'
+                    const [time, period] = timeStr.split(' ')
+
+                    return (
+                      <Link key={appointment.id} href={`/appointments/${appointment.id}`}>
+                        <div className="flex items-start gap-4 p-4 rounded-2xl hover:bg-secondary/50 transition-colors cursor-pointer">
+                          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/8 border border-primary/12">
+                            <div className="text-center">
+                              <div className="text-[15px] leading-[20px] font-semibold text-primary">{time}</div>
+                              <div className="text-[13px] leading-[18px] text-muted-foreground">{period || ''}</div>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">
+                                {appointment.lead?.name || 'Cliente'}
+                              </p>
+                              {appointment.status === "confirmada" ? (
+                                <CheckCircle2 className="h-4 w-4 text-success" />
+                              ) : (
+                                <Clock className="h-4 w-4 text-warning" />
+                              )}
+                            </div>
+                            <p className="text-[13px] leading-[18px] text-muted-foreground mb-2 truncate">
+                              {appointment.vehicle_interest || appointment.lead?.vehicle_interest || 'Vehículo no especificado'}
+                            </p>
+                            <Badge variant="outline" className="text-[13px] rounded-full">
+                              {appointmentTypeLabels[appointment.appointment_type || ''] || appointment.appointment_type || 'Consulta'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
             </CardContent>
           </GlassCard>
         </div>
