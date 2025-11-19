@@ -25,63 +25,72 @@ import {
 import Link from "next/link"
 import { CallLoggingModal } from "@/components/call-logging-modal"
 import { LeadQualificationForm } from "@/components/lead-qualification-form"
+import { useLead } from "@/hooks/use-supabase-data"
+import { Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { lead, loading, error } = useLead(id)
   const [showCallModal, setShowCallModal] = useState(false)
 
-  // Mock lead data
-  const lead = {
-    id: id,
-    firstName: "Maria",
-    lastName: "Lopez",
-    email: "maria.lopez@email.com",
-    phone: "(555) 234-5678",
-    source: "Facebook",
-    status: "contacted",
-    priority: "high",
-    vehicleInterest: "2019 Honda Civic",
-    budget: "$18,000 - $22,000",
-    location: "Miami, FL",
-    assignedTo: "You",
-    createdAt: "2024-01-15",
-    lastContact: "2024-01-16",
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Lead" subtitle="Cargando..." />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
   }
 
-  const activities = [
-    {
-      id: "1",
-      type: "call",
-      description: "Llamada al cliente - Interesado, buen crédito, tiene vehículo para cambio",
-      createdBy: "Maria Rodriguez",
-      createdAt: "hace 2 horas",
-    },
-    {
-      id: "2",
-      type: "note",
-      description: "Cliente mencionó que necesita finalizar antes de fin de mes",
-      createdBy: "Maria Rodriguez",
-      createdAt: "hace 3 horas",
-    },
-    {
-      id: "3",
-      type: "status_change",
-      description: "Estado cambiado de Nuevo a Contactado",
-      createdBy: "Sistema",
-      createdAt: "hace 5 horas",
-    },
-  ]
+  if (error || !lead) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Lead" subtitle="Error al cargar lead" />
+        <div className="flex-1 px-8 pt-10 pb-8">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error || 'Lead no encontrado'}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  // Transform lead data for display
+  const leadData = {
+    id: lead.id,
+    name: lead.name || "Sin nombre",
+    phone: lead.phone || "Sin teléfono",
+    email: lead.source || "",
+    source: lead.source || "unknown",
+    status: lead.status || "nuevo",
+    urgency_level: lead.urgency_level || "media",
+    vehicleInterest: lead.vehicle_interest || "No especificado",
+    budget: lead.budget_range || "No especificado",
+    assignedTo: lead.assigned_user?.full_name || lead.assigned_user?.email || "Sin asignar",
+    createdAt: lead.created_at,
+    lastContact: lead.last_contact_at,
+    notes: lead.notes || "",
+  }
+
+  // Mock activities - TODO: Fetch from interactions API
+  const activities: any[] = []
 
   const handleCall = () => {
-    // Simulate making a call
-    window.open(`tel:${lead.phone}`)
+    // Make a call
+    window.open(`tel:${leadData.phone}`)
     // Show call logging modal after a short delay
     setTimeout(() => setShowCallModal(true), 1000)
   }
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Detalles del Lead" subtitle={`${lead.firstName} ${lead.lastName}`} />
+      <DashboardHeader title="Detalles del Lead" subtitle={leadData.name} />
 
       <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-6">
@@ -100,31 +109,32 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-2xl font-bold">
-                    {lead.firstName[0]}
-                    {lead.lastName[0]}
+                    {leadData.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-foreground mb-2">
-                      {lead.firstName} {lead.lastName}
+                      {leadData.name}
                     </h2>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <Badge variant="default">Contactado</Badge>
-                      <Badge variant="destructive">Prioridad Alta</Badge>
-                      <Badge variant="outline">{lead.source}</Badge>
+                      <Badge variant="default">{leadData.status}</Badge>
+                      {leadData.urgency_level && (
+                        <Badge variant={leadData.urgency_level === 'alta' || leadData.urgency_level === 'urgente' ? 'destructive' : 'secondary'}>
+                          {leadData.urgency_level}
+                        </Badge>
+                      )}
+                      <Badge variant="outline">{leadData.source}</Badge>
                     </div>
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Phone className="h-4 w-4" />
-                        {lead.phone}
+                        {leadData.phone}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        {lead.email}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {lead.location}
-                      </div>
+                      {leadData.email && (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          {leadData.email}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -161,7 +171,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <Car className="h-5 w-5 text-primary" />
                   <span className="text-sm font-medium text-muted-foreground">Interés en Vehículo</span>
                 </div>
-                <p className="text-lg font-semibold text-foreground">{lead.vehicleInterest}</p>
+                <p className="text-lg font-semibold text-foreground">{leadData.vehicleInterest}</p>
               </CardContent>
             </GlassCard>
 
@@ -171,7 +181,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <DollarSign className="h-5 w-5 text-success" />
                   <span className="text-sm font-medium text-muted-foreground">Rango de Presupuesto</span>
                 </div>
-                <p className="text-lg font-semibold text-foreground">{lead.budget}</p>
+                <p className="text-lg font-semibold text-foreground">{leadData.budget}</p>
               </CardContent>
             </GlassCard>
 
@@ -181,7 +191,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <Clock className="h-5 w-5 text-warning" />
                   <span className="text-sm font-medium text-muted-foreground">Último Contacto</span>
                 </div>
-                <p className="text-lg font-semibold text-foreground">{lead.lastContact}</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {leadData.lastContact 
+                    ? formatDistanceToNow(new Date(leadData.lastContact), { addSuffix: true, locale: es })
+                    : 'Nunca'}
+                </p>
               </CardContent>
             </GlassCard>
           </div>
@@ -256,19 +270,23 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <Label className="text-sm text-muted-foreground">Asignado a</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">{lead.assignedTo}</p>
+                      <p className="text-sm font-medium text-foreground mt-1">{leadData.assignedTo}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Fecha de Creación</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">{lead.createdAt}</p>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {leadData.createdAt 
+                          ? formatDistanceToNow(new Date(leadData.createdAt), { addSuffix: true, locale: es })
+                          : 'N/A'}
+                      </p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Fuente</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">{lead.source}</p>
+                      <p className="text-sm font-medium text-foreground mt-1 capitalize">{leadData.source}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Estado</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">{lead.status}</p>
+                      <p className="text-sm font-medium text-foreground mt-1 capitalize">{leadData.status}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -308,7 +326,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       <CallLoggingModal
         open={showCallModal}
         onOpenChange={setShowCallModal}
-        leadName={`${lead.firstName} ${lead.lastName}`}
+        leadName={leadData.name}
+        leadId={leadData.id}
       />
     </div>
   )

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useLeads, useAppointments } from "@/hooks/use-supabase-data"
+import { useRole } from "@/lib/role-context"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -38,6 +39,12 @@ const appointmentTypeLabels: Record<string, string> = {
 export default function DashboardPage() {
   const { leads, loading: leadsLoading } = useLeads()
   const { appointments, loading: appointmentsLoading } = useAppointments()
+  const { user } = useRole()
+  
+  // Get user's first name or fallback
+  const userName = user?.full_name 
+    ? user.full_name.split(' ')[0] 
+    : user?.email?.split('@')[0] || 'Usuario'
 
   // Calculate stats from real data
   const activeLeads = leads?.filter(l => !['cerrado', 'perdido'].includes(l.status || '')).length || 0
@@ -98,7 +105,10 @@ export default function DashboardPage() {
   ]
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Dashboard" subtitle="¡Bienvenida de nuevo, Maria! Esto es lo que está pasando hoy." />
+      <DashboardHeader 
+        title="Dashboard" 
+        subtitle={`¡Bienvenido de nuevo, ${userName}! Esto es lo que está pasando hoy.`} 
+      />
 
       <div className="flex-1 space-y-8 px-8 pt-10 pb-8 overflow-y-auto">
         {/* Stats Grid */}

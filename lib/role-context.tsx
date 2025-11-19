@@ -1,38 +1,52 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import type { User } from "./auth"
+import { createContext, useContext, type ReactNode } from "react"
+import { useAuthStore } from "./stores/auth-store"
 
-export type UserRole = "agent" | "dealer"
+export type UserRole = "agent" | "dealer" | "admin"
 
 interface RoleContextType {
   role: UserRole
-  setRole: (role: UserRole) => void
-  user: User | null
-  setUser: (user: User | null) => void
+  user: { id: string; email: string; full_name: string | null; role: string | null } | null
+  loading: boolean
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>("agent")
-  const [user, setUser] = useState<User | null>(null)
+  const { user: authUser, profile, loading, initialized } = useAuthStore()
 
-  // Load role from localStorage on mount
-  useEffect(() => {
-    const savedRole = localStorage.getItem("userRole") as UserRole | null
-    if (savedRole && (savedRole === "agent" || savedRole === "dealer")) {
-      setRoleState(savedRole)
-    }
-  }, [])
+  // Get role from profile, default to 'agent' if profile exists but role is null
+  // If profile is null and we're initialized, user might not have profile yet
+  const role: UserRole = profile?.role 
+    ? (profile.role as UserRole) 
+    : profile === null && initialized 
+      ? "agent" // Default for users without profile
+      : "agent" // Default while loading
 
-  // Persist role to localStorage when it changes
-  const setRole = (newRole: UserRole) => {
-    setRoleState(newRole)
-    localStorage.setItem("userRole", newRole)
-  }
+  // Map auth user to role context user format
+  const user = authUser && profile
+    ? {
+        id: authUser.id,
+        email: profile.email || authUser.email || "",
+        full_name: profile.full_name,
+        role: profile.role,
+      }
+    : authUser && !profile && initialized
+      ? {
+          // User exists but profile doesn't - use auth user data
+          id: authUser.id,
+          email: authUser.email || "",
+          full_name: null,
+          role: null,
+        }
+      : null
 
-  return <RoleContext.Provider value={{ role, setRole, user, setUser }}>{children}</RoleContext.Provider>
+  return (
+    <RoleContext.Provider value={{ role, user, loading: loading || !initialized }}>
+      {children}
+    </RoleContext.Provider>
+  )
 }
 
 export function useRole() {

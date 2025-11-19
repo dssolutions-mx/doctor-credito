@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,8 +17,9 @@ import {
   Clock,
   Target,
 } from "lucide-react"
-import { mockLeads, mockAppointments, mockCustomers } from "@/lib/mock-data"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -34,55 +36,154 @@ import {
 } from "recharts"
 
 export default function ReportsPage() {
-  // Calculate metrics
-  const totalLeads = mockLeads.length
-  const totalAppointments = mockAppointments.length
-  const totalCustomers = mockCustomers.length
-  const totalRevenue = mockCustomers.reduce(
-    (sum, c) => sum + c.purchaseHistory.reduce((pSum, p) => pSum + p.salePrice, 0),
-    0,
-  )
-  const conversionRate = ((mockCustomers.filter((c) => c.status === "active").length / totalLeads) * 100).toFixed(1)
+  const [reportData, setReportData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState("30days")
 
-  // Lead source data
-  const leadSourceData = [
-    { name: "Facebook", value: mockLeads.filter((l) => l.source === "facebook").length, color: "#3b82f6" },
-    { name: "Website", value: mockLeads.filter((l) => l.source === "website").length, color: "#10b981" },
-    { name: "Phone", value: mockLeads.filter((l) => l.source === "phone").length, color: "#f59e0b" },
-    { name: "Referral", value: mockLeads.filter((l) => l.source === "referral").length, color: "#8b5cf6" },
-  ]
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-  // Lead status funnel
+        // Calculate date range based on period
+        const endDate = new Date()
+        const startDate = new Date()
+        
+        switch (period) {
+          case "7days":
+            startDate.setDate(startDate.getDate() - 7)
+            break
+          case "30days":
+            startDate.setDate(startDate.getDate() - 30)
+            break
+          case "90days":
+            startDate.setDate(startDate.getDate() - 90)
+            break
+          case "year":
+            startDate.setFullYear(startDate.getFullYear() - 1)
+            break
+          default:
+            startDate.setDate(startDate.getDate() - 30)
+        }
+
+        const params = new URLSearchParams({
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+        })
+
+        const response = await fetch(`/api/reports?${params}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch reports')
+        }
+
+        const data = await response.json()
+        setReportData(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [period])
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Reportes y Análisis" subtitle="Cargando reportes..." />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !reportData) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Reportes y Análisis" subtitle="Error al cargar reportes" />
+        <div className="flex-1 px-8 pt-10 pb-8">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error || 'No se pudieron cargar los reportes'}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  // Extract data from API response
+  const {
+    summary,
+    leadsByStatus,
+    leadsBySource,
+    appointmentsByStatus,
+    appointmentsByType,
+    monthlyData,
+  } = reportData
+
+  const totalLeads = summary?.totalLeads || 0
+  const totalAppointments = summary?.totalAppointments || 0
+  const totalCustomers = summary?.closedDeals || 0 // Using closed deals as customers
+  const totalRevenue = summary?.totalRevenue || 0
+  const conversionRate = summary?.conversionRate || 0
+
+  // Transform lead source data for charts
+  const leadSourceData = Object.entries(leadsBySource || {}).map(([name, value]) => {
+    const colors: Record<string, string> = {
+      facebook: "#3b82f6",
+      website: "#10b981",
+      phone: "#f59e0b",
+      referral: "#8b5cf6",
+    }
+    return { name: name.charAt(0).toUpperCase() + name.slice(1), value: value as number, color: colors[name] || "#6b7280" }
+  })
+
+  // Transform lead status funnel
   const leadFunnelData = [
-    { stage: "New", count: mockLeads.filter((l) => l.status === "new").length },
-    { stage: "Contacted", count: mockLeads.filter((l) => l.status === "contacted").length },
-    { stage: "Qualified", count: mockLeads.filter((l) => l.status === "qualified").length },
-    { stage: "Appointment", count: mockLeads.filter((l) => l.status === "appointment").length },
-    { stage: "Closed", count: mockLeads.filter((l) => l.status === "closed").length },
+    { stage: "Nuevo", count: leadsByStatus?.nuevo || 0 },
+    { stage: "Contactado", count: leadsByStatus?.contactado || 0 },
+    { stage: "Calificado", count: leadsByStatus?.calificado || 0 },
+    { stage: "Cita", count: leadsByStatus?.cita_programada || 0 },
+    { stage: "Cerrado", count: leadsByStatus?.cerrado || 0 },
   ]
 
-  // Monthly performance (mock data)
-  const monthlyPerformanceData = [
-    { month: "Jul", leads: 18, appointments: 12, sales: 4, revenue: 142000 },
-    { month: "Aug", leads: 22, appointments: 15, sales: 6, revenue: 189000 },
-    { month: "Sep", leads: 25, appointments: 18, sales: 5, revenue: 165000 },
-    { month: "Oct", leads: 20, appointments: 14, sales: 7, revenue: 224000 },
-    { month: "Nov", leads: 28, appointments: 20, sales: 8, revenue: 267000 },
-    { month: "Dec", leads: 24, appointments: 16, sales: 5, revenue: 178000 },
-  ]
+  // Transform monthly data for charts
+  const monthlyPerformanceData = (monthlyData || []).slice(-6).map((m: any) => ({
+    month: new Date(m.month + '-01').toLocaleDateString('es', { month: 'short' }),
+    leads: m.leads || 0,
+    appointments: 0, // Not tracked in monthly data yet
+    sales: 0, // Not tracked yet
+    revenue: m.revenue || 0,
+  }))
 
-  // Appointment type distribution
-  const appointmentTypeData = [
-    { name: "Test Drive", value: mockAppointments.filter((a) => a.type === "test_drive").length, color: "#3b82f6" },
-    {
-      name: "Credit Approval",
-      value: mockAppointments.filter((a) => a.type === "credit_approval").length,
-      color: "#06b6d4",
-    },
-    { name: "Delivery", value: mockAppointments.filter((a) => a.type === "delivery").length, color: "#10b981" },
-    { name: "Trade-in", value: mockAppointments.filter((a) => a.type === "trade_in").length, color: "#f59e0b" },
-    { name: "Consultation", value: mockAppointments.filter((a) => a.type === "consultation").length, color: "#6b7280" },
-  ]
+  // Transform appointment type data
+  const appointmentTypeData = Object.entries(appointmentsByType || {}).map(([name, value]) => {
+    const colors: Record<string, string> = {
+      test_drive: "#3b82f6",
+      credit_approval: "#06b6d4",
+      delivery: "#10b981",
+      trade_in: "#f59e0b",
+      consultation: "#6b7280",
+      showroom: "#8b5cf6",
+    }
+    const labels: Record<string, string> = {
+      test_drive: "Test Drive",
+      credit_approval: "Credit Approval",
+      delivery: "Delivery",
+      trade_in: "Trade-in",
+      consultation: "Consultation",
+      showroom: "Showroom",
+    }
+    return { 
+      name: labels[name] || name, 
+      value: value as number, 
+      color: colors[name] || "#6b7280" 
+    }
+  })
 
   return (
     <div className="flex flex-col h-full">
@@ -91,15 +192,15 @@ export default function ReportsPage() {
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
         {/* Period Selector */}
         <div className="flex justify-end">
-          <Select defaultValue="30days">
+          <Select value={period} onValueChange={setPeriod}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">Last 7 days</SelectItem>
-              <SelectItem value="30days">Last 30 days</SelectItem>
-              <SelectItem value="90days">Last 90 days</SelectItem>
-              <SelectItem value="year">This year</SelectItem>
+              <SelectItem value="7days">Últimos 7 días</SelectItem>
+              <SelectItem value="30days">Últimos 30 días</SelectItem>
+              <SelectItem value="90days">Últimos 90 días</SelectItem>
+              <SelectItem value="year">Este año</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -115,7 +216,6 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-foreground">{totalLeads}</div>
-              <p className="text-xs text-success mt-1">+12% from last month</p>
             </CardContent>
           </GlassCard>
 
@@ -128,7 +228,6 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-foreground">{totalAppointments}</div>
-              <p className="text-xs text-success mt-1">+8% from last month</p>
             </CardContent>
           </GlassCard>
 
@@ -141,7 +240,6 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-foreground">{totalCustomers}</div>
-              <p className="text-xs text-success mt-1">+15% from last month</p>
             </CardContent>
           </GlassCard>
 
@@ -154,7 +252,6 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">${(totalRevenue / 1000).toFixed(0)}K</div>
-              <p className="text-xs text-success mt-1">+22% from last month</p>
             </CardContent>
           </GlassCard>
 
@@ -166,8 +263,7 @@ export default function ReportsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">{conversionRate}%</div>
-              <p className="text-xs text-success mt-1">+3.2% from last month</p>
+              <div className="text-3xl font-bold text-foreground">{conversionRate.toFixed(1)}%</div>
             </CardContent>
           </GlassCard>
         </div>

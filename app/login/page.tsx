@@ -3,30 +3,41 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, EyeOff, Car } from "lucide-react"
+import { Eye, EyeOff, Car, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { useAuthStore } from "@/lib/stores/auth-store"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { signIn, loading } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setError(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("[v0] Login attempted with:", { email })
-      setIsLoading(false)
-      // Redirect to dashboard
-      window.location.href = "/dashboard"
-    }, 1500)
+    if (!email || !password) {
+      setError("Por favor completa todos los campos")
+      return
+    }
+
+    const result = await signIn(email, password)
+
+    if (result.error) {
+      setError(result.error)
+    } else {
+      // Success - redirect will be handled by auth provider
+      router.push("/dashboard")
+    }
   }
 
   return (
@@ -45,6 +56,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-5">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -54,9 +72,13 @@ export default function LoginPage() {
                 type="email"
                 placeholder="agent@dealership.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setError(null)
+                }}
                 required
                 className="h-12"
+                disabled={loading}
               />
             </div>
 
@@ -75,15 +97,20 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Ingresa tu contraseña"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setError(null)
+                  }}
                   required
                   className="h-12 pr-12"
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors size-11"
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
                 </button>
@@ -92,14 +119,14 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4 mt-6">
-            <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
-              {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+            <Button type="submit" className="w-full h-12 text-base font-medium" disabled={loading}>
+              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
 
             <p className="text-sm text-center text-muted-foreground">
-              ¿Necesitas acceso? Contacta a tu{" "}
-              <Link href="/contact" className="text-primary hover:text-primary/80 transition-colors font-medium">
-                administrador
+              ¿No tienes cuenta?{" "}
+              <Link href="/register" className="text-primary hover:text-primary/80 transition-colors font-medium">
+                Regístrate aquí
               </Link>
             </p>
           </CardFooter>

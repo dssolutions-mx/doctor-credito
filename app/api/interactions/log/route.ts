@@ -1,14 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-helpers'
 
 export async function POST(request: Request) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const body = await request.json()
     const { lead_id, type, outcome, notes, duration_seconds } = body
-
-    // Get current user (will need proper auth later)
-    const { data: { user } } = await supabase.auth.getUser()
 
     // Log the interaction
     const { data: interaction, error } = await supabase

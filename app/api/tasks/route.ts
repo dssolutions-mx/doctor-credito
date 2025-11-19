@@ -1,8 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-helpers'
 
 export async function GET(request: Request) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
@@ -17,10 +24,6 @@ export async function GET(request: Request) {
           name,
           phone,
           vehicle_interest
-        ),
-        assigned_user:profiles!assigned_to(
-          full_name,
-          email
         )
       `)
       .order('due_at', { ascending: true })
@@ -33,14 +36,38 @@ export async function GET(request: Request) {
       query = query.eq('lead_id', leadId)
     }
 
-    const { data, error } = await query
+    const { data: tasks, error } = await query
 
     if (error) {
       console.error('Error fetching tasks:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ tasks: data })
+    // Fetch assigned user profiles separately to avoid RLS recursion
+    const assignedUserIds = tasks?.map(t => t.assigned_to).filter(Boolean) || []
+    let assignedUsers: Record<string, any> = {}
+    
+    if (assignedUserIds.length > 0) {
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', [...new Set(assignedUserIds)])
+      
+      if (users) {
+        assignedUsers = users.reduce((acc, u) => {
+          acc[u.id] = u
+          return acc
+        }, {} as Record<string, any>)
+      }
+    }
+
+    // Attach assigned user data to tasks
+    const tasksWithUsers = tasks?.map(task => ({
+      ...task,
+      assigned_user: task.assigned_to ? assignedUsers[task.assigned_to] || null : null,
+    })) || []
+
+    return NextResponse.json({ tasks: tasksWithUsers })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({
@@ -51,6 +78,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const body = await request.json()
 

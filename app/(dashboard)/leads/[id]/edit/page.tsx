@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, use } from "react"
+import { useState, use, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
@@ -12,41 +12,96 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useLead } from "@/hooks/use-supabase-data"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
+  const { lead, loading: leadLoading, error } = useLead(id)
   const [loading, setLoading] = useState(false)
 
-  // Mock lead data
+  // Initialize form data from lead
   const [formData, setFormData] = useState({
-    firstName: "Maria",
-    lastName: "Lopez",
-    email: "maria.lopez@email.com",
-    phone: "(555) 234-5678",
-    source: "facebook",
-    status: "contacted",
-    priority: "high",
-    vehicleInterest: "2019 Honda Civic",
-    budget: "$18,000 - $22,000",
-    notes: "Has trade-in, needs financing",
+    name: "",
+    phone: "",
+    source: "",
+    status: "",
+    urgency_level: "",
+    vehicle_interest: "",
+    budget_range: "",
+    notes: "",
   })
+
+  // Update form data when lead loads
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || "",
+        phone: lead.phone || "",
+        source: lead.source || "",
+        status: lead.status || "nuevo",
+        urgency_level: lead.urgency_level || "media",
+        vehicle_interest: lead.vehicle_interest || "",
+        budget_range: lead.budget_range || "",
+        notes: lead.notes || "",
+      })
+    }
+  }, [lead])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // Simulate save
-    setTimeout(() => {
-      setLoading(false)
+    
+    try {
+      const response = await fetch(`/api/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update lead')
+      }
+
       router.push(`/leads/${id}`)
-    }, 1000)
+    } catch (error) {
+      console.error('Error updating lead:', error)
+      alert('Error al actualizar el lead. Por favor intenta de nuevo.')
+      setLoading(false)
+    }
+  }
+
+  if (leadLoading) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Editar Lead" subtitle="Cargando..." />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !lead) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Editar Lead" subtitle="Error al cargar lead" />
+        <div className="flex-1 px-8 pt-10 pb-8">
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error || 'Lead no encontrado'}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Editar Lead" subtitle={`${formData.firstName} ${formData.lastName}`} />
+      <DashboardHeader title="Editar Lead" subtitle={formData.name || "Lead"} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-3xl mx-auto space-y-6">
@@ -67,37 +122,16 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
               <CardContent className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name *</Label>
+                    <Label htmlFor="name">Nombre *</Label>
                     <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone *</Label>
+                    <Label htmlFor="phone">Teléfono *</Label>
                     <Input
                       id="phone"
                       type="tel"
@@ -137,51 +171,51 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="new">Nuevo</SelectItem>
-                        <SelectItem value="contacted">Contactado</SelectItem>
-                        <SelectItem value="qualified">Calificado</SelectItem>
-                        <SelectItem value="appointment">Cita</SelectItem>
-                        <SelectItem value="negotiation">Negociación</SelectItem>
-                        <SelectItem value="closed">Cerrado</SelectItem>
-                        <SelectItem value="lost">Perdido</SelectItem>
+                        <SelectItem value="nuevo">Nuevo</SelectItem>
+                        <SelectItem value="contactado">Contactado</SelectItem>
+                        <SelectItem value="calificado">Calificado</SelectItem>
+                        <SelectItem value="cita_programada">Cita Programada</SelectItem>
+                        <SelectItem value="negociacion">Negociación</SelectItem>
+                        <SelectItem value="cerrado">Cerrado</SelectItem>
+                        <SelectItem value="perdido">Perdido</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="priority">Prioridad</Label>
+                    <Label htmlFor="urgency_level">Urgencia</Label>
                     <Select
-                      value={formData.priority}
-                      onValueChange={(value) => setFormData({ ...formData, priority: value })}
+                      value={formData.urgency_level}
+                      onValueChange={(value) => setFormData({ ...formData, urgency_level: value })}
                     >
-                      <SelectTrigger id="priority">
+                      <SelectTrigger id="urgency_level">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Baja</SelectItem>
-                        <SelectItem value="medium">Media</SelectItem>
-                        <SelectItem value="high">Alta</SelectItem>
-                        <SelectItem value="urgent">Urgente</SelectItem>
+                        <SelectItem value="baja">Baja</SelectItem>
+                        <SelectItem value="media">Media</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                        <SelectItem value="urgente">Urgente</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="vehicleInterest">Vehicle Interest</Label>
+                  <Label htmlFor="vehicle_interest">Interés en Vehículo</Label>
                   <Input
-                    id="vehicleInterest"
-                    value={formData.vehicleInterest}
-                    onChange={(e) => setFormData({ ...formData, vehicleInterest: e.target.value })}
+                    id="vehicle_interest"
+                    value={formData.vehicle_interest}
+                    onChange={(e) => setFormData({ ...formData, vehicle_interest: e.target.value })}
                     placeholder="e.g., 2019 Honda Civic"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="budget">Budget Range</Label>
+                  <Label htmlFor="budget_range">Rango de Presupuesto</Label>
                   <Input
-                    id="budget"
-                    value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    id="budget_range"
+                    value={formData.budget_range}
+                    onChange={(e) => setFormData({ ...formData, budget_range: e.target.value })}
                     placeholder="e.g., $15,000 - $20,000"
                   />
                 </div>

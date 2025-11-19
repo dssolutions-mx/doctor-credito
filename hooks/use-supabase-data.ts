@@ -132,21 +132,50 @@ export function useConversations(withPhone?: boolean, status?: string) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchConversations = async () => {
+    let retryCount = 0
+    const maxRetries = 3
+
+    const fetchConversations = async (): Promise<void> => {
       try {
         setLoading(true)
+        setError(null)
+        
         const params = new URLSearchParams()
         if (withPhone !== undefined) params.append('with_phone', withPhone.toString())
         if (status) params.append('status', status)
 
         const url = `/api/conversations${params.toString() ? `?${params}` : ''}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error('Failed to fetch conversations')
+        const response = await fetch(url, {
+          cache: 'no-store',
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Failed to fetch conversations: ${response.statusText}`)
+        }
 
         const data = await response.json()
-        setConversations(data.conversations || [])
+        
+        // Ensure we always have an array
+        if (!Array.isArray(data.conversations)) {
+          console.warn('Conversations API returned non-array data:', data)
+          setConversations([])
+        } else {
+          setConversations(data.conversations)
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+        setError(errorMessage)
+        
+        // Retry logic for transient errors
+        if (retryCount < maxRetries && (errorMessage.includes('fetch') || errorMessage.includes('network'))) {
+          retryCount++
+          setTimeout(() => {
+            fetchConversations()
+          }, 1000 * retryCount) // Exponential backoff
+        } else {
+          console.error('Error fetching conversations:', err)
+        }
       } finally {
         setLoading(false)
       }
@@ -155,5 +184,22 @@ export function useConversations(withPhone?: boolean, status?: string) {
     fetchConversations()
   }, [withPhone, status])
 
-  return { conversations, loading, error }
+  return { conversations, loading, error, refetch: () => {
+    setLoading(true)
+    setError(null)
+    // Trigger re-fetch by updating a dependency
+    const params = new URLSearchParams()
+    if (withPhone !== undefined) params.append('with_phone', withPhone.toString())
+    if (status) params.append('status', status)
+    fetch(`/api/conversations${params.toString() ? `?${params}` : ''}`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setConversations(Array.isArray(data.conversations) ? data.conversations : [])
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+        setLoading(false)
+      })
+  } }
 }

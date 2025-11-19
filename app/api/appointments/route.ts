@@ -1,12 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-helpers'
 
 export async function GET(request: Request) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const leadId = searchParams.get('lead_id')
+
+    // Get user profile to check role for filtering
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role, id')
+      .eq('id', user.id)
+      .single()
 
     let query = supabase
       .from('appointments')
@@ -16,7 +30,8 @@ export async function GET(request: Request) {
           id,
           name,
           phone,
-          vehicle_interest
+          vehicle_interest,
+          assigned_to
         ),
         dealer:dealers(
           id,
@@ -27,6 +42,11 @@ export async function GET(request: Request) {
       `)
       .order('scheduled_at', { ascending: true })
 
+    // Filter appointments based on role
+    if (userProfile?.role === 'dealer') {
+      query = query.eq('dealer_id', user.id)
+    }
+
     if (status) {
       query = query.eq('status', status)
     }
@@ -35,14 +55,41 @@ export async function GET(request: Request) {
       query = query.eq('lead_id', leadId)
     }
 
-    const { data, error } = await query
+    const { data: appointments, error } = await query
 
     if (error) {
       console.error('Error fetching appointments:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ appointments: data })
+    // Fetch assigned user profiles separately to avoid RLS recursion
+    const assignedUserIds = appointments?.map(a => a.lead?.assigned_to).filter(Boolean) || []
+    let assignedUsers: Record<string, any> = {}
+    
+    if (assignedUserIds.length > 0) {
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', [...new Set(assignedUserIds)])
+      
+      if (users) {
+        assignedUsers = users.reduce((acc, u) => {
+          acc[u.id] = u
+          return acc
+        }, {} as Record<string, any>)
+      }
+    }
+
+    // Attach assigned user data to appointments
+    const appointmentsWithUsers = appointments?.map(apt => ({
+      ...apt,
+      lead: apt.lead ? {
+        ...apt.lead,
+        assigned_user: apt.lead.assigned_to ? assignedUsers[apt.lead.assigned_to] || null : null,
+      } : null,
+    })) || []
+
+    return NextResponse.json({ appointments: appointmentsWithUsers })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({
@@ -53,6 +100,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const body = await request.json()
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Home, Users, Calendar, Car, BarChart3, Settings, LogOut, Kanban, ClipboardList, User, ChevronLeft, Menu } from "lucide-react"
+import { Home, Users, Calendar, Car, BarChart3, Settings, LogOut, Kanban, ClipboardList, User, ChevronLeft, Menu, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -14,9 +14,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useRole } from "@/lib/role-context"
+import { useAuthStore } from "@/lib/stores/auth-store"
 
 const agentNavigation = [
   { name: "Inicio", href: "/dashboard", icon: Home },
+  { name: "Conversaciones", href: "/conversations", icon: MessageSquare },
   { name: "Tareas", href: "/tasks", icon: ClipboardList },
   { name: "Leads", href: "/leads", icon: Users },
   { name: "Pipeline", href: "/leads/pipeline", icon: Kanban },
@@ -38,11 +40,21 @@ const dealerNavigation = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { role } = useRole()
+  const { role, user } = useRole()
+  const { signOut } = useAuthStore()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   
   const navigation = role === "dealer" ? dealerNavigation : agentNavigation
+
+  const handleSignOut = async () => {
+    await signOut()
+    window.location.href = "/login"
+  }
+
+  const userInitials = user?.full_name
+    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.[0].toUpperCase() || 'U'
 
   useEffect(() => {
     const checkMobile = () => {
@@ -150,12 +162,12 @@ export function AppSidebar() {
         {!isCollapsed && (
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-11 w-11 border-2 border-primary/10 flex-shrink-0 rounded-2xl">
-            <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">MR</AvatarFallback>
+            <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">{userInitials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">Maria Rodriguez</p>
+            <p className="text-[15px] leading-[20px] font-semibold text-foreground truncate">{user?.full_name || user?.email || "Usuario"}</p>
             <p className="text-[13px] leading-[18px] text-muted-foreground truncate">
-              {role === "dealer" ? "Concesionario" : "Agente BDC"}
+              {role === "dealer" ? "Concesionario" : role === "admin" ? "Administrador" : "Agente BDC"}
             </p>
             </div>
           </div>
@@ -163,7 +175,7 @@ export function AppSidebar() {
         {isCollapsed && (
           <div className="flex justify-center mb-3">
             <Avatar className="h-11 w-11 border-2 border-primary/10 rounded-2xl">
-              <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">MR</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground text-[15px] font-semibold rounded-2xl">{userInitials}</AvatarFallback>
             </Avatar>
         </div>
         )}
@@ -174,7 +186,7 @@ export function AppSidebar() {
             "bg-transparent rounded-2xl border-border",
             isCollapsed ? "h-11 w-11 justify-center p-0" : "w-full h-10 justify-start gap-2 px-4",
           )}
-          onClick={() => (window.location.href = "/login")}
+          onClick={handleSignOut}
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
           {!isCollapsed && <span className="text-[15px] leading-[20px] truncate">Cerrar sesión</span>}

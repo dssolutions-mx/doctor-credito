@@ -1,17 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-helpers'
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const { user, error: authError } = await getAuthenticatedUser()
+    if (authError || !user) {
+      return unauthorizedResponse()
+    }
+
     const supabase = await createClient()
     const { id } = await params
     const body = await request.json()
-
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
 
     // If marking as complete, set completed_at and completed_by
     if (body.status === 'completada') {
