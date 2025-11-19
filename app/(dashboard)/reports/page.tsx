@@ -532,7 +532,7 @@ export default function ReportsPage() {
                         <span className="font-medium">Confirmed</span>
                       </div>
                       <span className="text-2xl font-bold text-success">
-                        {mockAppointments.filter((a) => a.status === "confirmed").length}
+                        {appointmentsByStatus?.confirmada || appointmentsByStatus?.confirmed || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-4 rounded-lg bg-warning/10">
@@ -541,7 +541,7 @@ export default function ReportsPage() {
                         <span className="font-medium">Pending</span>
                       </div>
                       <span className="text-2xl font-bold text-warning">
-                        {mockAppointments.filter((a) => a.status === "pending").length}
+                        {appointmentsByStatus?.programada || appointmentsByStatus?.pending || 0}
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-4 rounded-lg bg-secondary">
@@ -550,7 +550,7 @@ export default function ReportsPage() {
                         <span className="font-medium">Completed</span>
                       </div>
                       <span className="text-2xl font-bold text-foreground">
-                        {mockAppointments.filter((a) => a.status === "completed").length}
+                        {appointmentsByStatus?.completada || appointmentsByStatus?.completed || 0}
                       </span>
                     </div>
                   </div>
