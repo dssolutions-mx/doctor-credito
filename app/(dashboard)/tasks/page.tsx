@@ -1,18 +1,55 @@
 "use client"
 
+import { useState } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Phone, Clock, AlertCircle, CheckCircle2, Calendar } from "lucide-react"
+import { Phone, Clock, AlertCircle, CheckCircle2, Calendar, Loader2, Plus } from "lucide-react"
 import Link from "next/link"
 import { useTasks } from "@/hooks/use-supabase-data"
 import { formatDistanceToNow, isPast, isToday } from "date-fns"
 import { es } from "date-fns/locale"
+import { toast } from "sonner"
+import { TaskCreationDialog } from "@/components/task-creation-dialog"
 
 export default function TasksPage() {
-  const { tasks: allTasks, loading } = useTasks('pendiente')
+  const { tasks: allTasks, loading, refetch } = useTasks('pendiente')
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null)
+  const [showTaskDialog, setShowTaskDialog] = useState(false)
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      setCompletingTaskId(taskId)
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "completada",
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al completar la tarea")
+      }
+
+      toast.success("Tarea completada exitosamente")
+      // Refresh tasks list
+      if (refetch) {
+        refetch()
+      } else {
+        // Fallback: reload page if refetch not available
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error("Error completing task:", error)
+      toast.error(error instanceof Error ? error.message : "Error al completar la tarea")
+    } finally {
+      setCompletingTaskId(null)
+    }
+  }
 
   // Categorize tasks
   const urgentTasks = (allTasks || []).filter(t => {
@@ -77,9 +114,23 @@ export default function TasksPage() {
                 <span>{dueText}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="gap-2 rounded-2xl">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Completar
+                <Button
+                  size="sm"
+                  className="gap-2 rounded-2xl"
+                  onClick={() => handleCompleteTask(task.id)}
+                  disabled={completingTaskId === task.id}
+                >
+                  {completingTaskId === task.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Completando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Completar
+                    </>
+                  )}
                 </Button>
                 {task.lead_id && (
                   <Link href={`/leads/${task.lead_id}`}>
@@ -98,7 +149,22 @@ export default function TasksPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <DashboardHeader title="Tareas" subtitle="Administra tus prioridades diarias y seguimientos" />
+      <div className="glass-nav sticky top-0 z-40 border-b border-border">
+        <div className="flex h-24 items-center justify-between px-8">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[28px] leading-[36px] font-semibold tracking-tight text-foreground">Tareas</h1>
+            <p className="text-[15px] leading-[20px] text-muted-foreground mt-1.5">
+              Administra tus prioridades diarias y seguimientos
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button onClick={() => setShowTaskDialog(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nueva Tarea
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-8">
@@ -164,6 +230,16 @@ export default function TasksPage() {
           )}
         </div>
       </div>
+
+      <TaskCreationDialog
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        onSuccess={() => {
+          if (refetch) {
+            refetch()
+          }
+        }}
+      />
     </div>
   )
 }

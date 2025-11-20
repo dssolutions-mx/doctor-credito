@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { CallLoggingModal } from "@/components/call-logging-modal"
+import { TaskCreationDialog } from "@/components/task-creation-dialog"
 import { LeadQualificationForm } from "@/components/lead-qualification-form"
 import { useLead } from "@/hooks/use-supabase-data"
 import { Loader2 } from "lucide-react"
@@ -35,6 +36,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params)
   const { lead, loading, error } = useLead(id)
   const [showCallModal, setShowCallModal] = useState(false)
+  const [showTaskDialog, setShowTaskDialog] = useState(false)
 
   if (loading) {
     return (
@@ -78,8 +80,127 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     notes: lead.notes || "",
   }
 
-  // Mock activities - TODO: Fetch from interactions API
+  // Transform interactions, tasks, and appointments into timeline activities
   const activities: any[] = []
+  
+  // Add interactions
+  if (lead.interactions && Array.isArray(lead.interactions)) {
+    lead.interactions.forEach((interaction: any) => {
+      const interactionType = interaction.type || "call"
+      const outcome = interaction.outcome || ""
+      const duration = interaction.duration_seconds
+        ? `${Math.floor(interaction.duration_seconds / 60)} min ${interaction.duration_seconds % 60} seg`
+        : null
+      const userName = interaction.user?.full_name || interaction.user?.email || "Usuario desconocido"
+      const createdAt = interaction.created_at
+        ? formatDistanceToNow(new Date(interaction.created_at), { addSuffix: true, locale: es })
+        : ""
+
+      let description = ""
+      if (interactionType.includes("call")) {
+        const outcomeText = {
+          answered: "Contestó - Hablé con el lead",
+          voicemail: "Dejé mensaje de voz",
+          "no-answer": "No contestó",
+          "wrong-number": "Número incorrecto",
+        }[outcome] || outcome
+
+        description = `Llamada: ${outcomeText}`
+        if (duration) {
+          description += ` (${duration})`
+        }
+        if (interaction.content) {
+          description += `\n${interaction.content}`
+        }
+      } else {
+        description = interaction.content || `${interactionType}`
+      }
+
+      activities.push({
+        id: interaction.id,
+        type: "call",
+        description,
+        createdBy: userName,
+        createdAt,
+        timestamp: interaction.created_at,
+        interaction: interaction,
+      })
+    })
+  }
+
+  // Add tasks
+  if (lead.tasks && Array.isArray(lead.tasks)) {
+    lead.tasks.forEach((task: any) => {
+      const userName = task.assigned_user?.full_name || task.assigned_user?.email || "Sin asignar"
+      const createdAt = task.created_at
+        ? formatDistanceToNow(new Date(task.created_at), { addSuffix: true, locale: es })
+        : ""
+      const dueAt = task.due_at
+        ? formatDistanceToNow(new Date(task.due_at), { addSuffix: true, locale: es })
+        : null
+
+      let description = `Tarea: ${task.title || "Sin título"}`
+      if (task.description) {
+        description += `\n${task.description}`
+      }
+      if (dueAt) {
+        description += `\nVence: ${dueAt}`
+      }
+      if (task.status === "completada") {
+        description += `\n✅ Completada`
+      }
+
+      activities.push({
+        id: task.id,
+        type: "task",
+        description,
+        createdBy: userName,
+        createdAt,
+        timestamp: task.created_at,
+        task: task,
+      })
+    })
+  }
+
+  // Add appointments
+  if (lead.appointments && Array.isArray(lead.appointments)) {
+    lead.appointments.forEach((appointment: any) => {
+      const createdAt = appointment.scheduled_at
+        ? formatDistanceToNow(new Date(appointment.scheduled_at), { addSuffix: true, locale: es })
+        : ""
+      const scheduledAt = appointment.scheduled_at
+        ? format(new Date(appointment.scheduled_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })
+        : ""
+
+      let description = `Cita: ${appointment.appointment_type || "Cita"}`
+      if (scheduledAt) {
+        description += `\nProgramada para: ${scheduledAt}`
+      }
+      if (appointment.status) {
+        description += `\nEstado: ${appointment.status}`
+      }
+      if (appointment.notes) {
+        description += `\n${appointment.notes}`
+      }
+
+      activities.push({
+        id: appointment.id,
+        type: "appointment",
+        description,
+        createdBy: "Sistema",
+        createdAt,
+        timestamp: appointment.scheduled_at || appointment.created_at,
+        appointment: appointment,
+      })
+    })
+  }
+
+  // Sort activities by timestamp (newest first)
+  activities.sort((a, b) => {
+    if (!a.timestamp) return 1
+    if (!b.timestamp) return -1
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  })
 
   const handleCall = () => {
     // Make a call
@@ -213,25 +334,47 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <GlassCard>
                 <CardHeader>
                   <CardTitle>Línea de Tiempo</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {activities.length} {activities.length === 1 ? "actividad" : "actividades"}
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {activities.map((activity) => (
-                      <div key={activity.id} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          {activity.type === "call" && <Phone className="h-4 w-4 text-primary" />}
-                          {activity.type === "note" && <MessageSquare className="h-4 w-4 text-primary" />}
-                          {activity.type === "status_change" && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                  {activities.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No hay actividades registradas</p>
+                      <p className="text-xs mt-1">Las llamadas, tareas y citas aparecerán aquí</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {activities.map((activity) => (
+                        <div key={activity.id} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            {activity.type === "call" && <Phone className="h-5 w-5 text-primary" />}
+                            {activity.type === "task" && <Clock className="h-5 w-5 text-primary" />}
+                            {activity.type === "appointment" && <Calendar className="h-5 w-5 text-primary" />}
+                            {activity.type === "note" && <MessageSquare className="h-5 w-5 text-primary" />}
+                            {activity.type === "status_change" && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-foreground mb-1 whitespace-pre-wrap break-words">
+                              {activity.description}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {activity.createdBy} • {activity.createdAt}
+                            </p>
+                            {activity.interaction?.outcome && (
+                              <div className="mt-2">
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {activity.interaction.outcome}
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-foreground mb-1">{activity.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {activity.createdBy} • {activity.createdAt}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-6 pt-6 border-t border-border">
                     <div className="flex gap-3">
@@ -305,9 +448,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <CheckCircle2 className="h-4 w-4" />
                   Marcar como Calificado
                 </Button>
-                <Button variant="outline" className="justify-start gap-2 bg-transparent">
+                <Button
+                  variant="outline"
+                  className="justify-start gap-2 bg-transparent"
+                  onClick={() => setShowTaskDialog(true)}
+                >
                   <Calendar className="h-4 w-4" />
-                  Programar Seguimiento
+                  Crear Tarea
                 </Button>
                 <Button variant="outline" className="justify-start gap-2 bg-transparent">
                   <Car className="h-4 w-4" />
@@ -328,6 +475,16 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         onOpenChange={setShowCallModal}
         leadName={leadData.name}
         leadId={leadData.id}
+      />
+
+      <TaskCreationDialog
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        leadId={leadData.id}
+        leadName={leadData.name}
+        onSuccess={() => {
+          // Optionally refresh lead data or show success message
+        }}
       />
     </div>
   )

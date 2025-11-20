@@ -66,32 +66,38 @@ export function useTasks(status?: string, leadId?: string) {
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const fetchTasks = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (status) params.append('status', status)
+      if (leadId) params.append('lead_id', leadId)
+
+      const url = `/api/tasks${params.toString() ? `?${params}` : ''}`
+      const response = await fetch(url)
+      if (!response.ok) throw new Error('Failed to fetch tasks')
+
+      const data = await response.json()
+      setTasks(data.tasks || [])
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setLoading(true)
-        const params = new URLSearchParams()
-        if (status) params.append('status', status)
-        if (leadId) params.append('lead_id', leadId)
-
-        const url = `/api/tasks${params.toString() ? `?${params}` : ''}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error('Failed to fetch tasks')
-
-        const data = await response.json()
-        setTasks(data.tasks || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchTasks()
-  }, [status, leadId])
+  }, [status, leadId, refreshKey])
 
-  return { tasks, loading, error }
+  const refetch = () => {
+    setRefreshKey(prev => prev + 1)
+  }
+
+  return { tasks, loading, error, refetch }
 }
 
 export function useAppointments(status?: string, leadId?: string) {
