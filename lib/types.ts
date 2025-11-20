@@ -45,14 +45,32 @@ export interface Vehicle {
   year: number
   make: string
   model: string
-  trim: string
+  trim?: string
   vin: string
-  stock: string
+  stock_number: string
+  stock?: string // Legacy field for backward compatibility
   price: number
   mileage: number
-  color: string
+  color?: string
+  exterior_color?: string
+  interior_color?: string
   status: "available" | "pending" | "sold"
-  images: string[]
+  images?: string[]
+  image_urls?: string[]
+  primary_image_url?: string
+  condition?: "new" | "used" | "certified"
+  transmission?: string
+  fuel_type?: string
+  drivetrain?: string
+  body_style?: string
+  engine?: string
+  features?: string[]
+  description?: string
+  marketing_title?: string
+  sale_price?: number
+  cost?: number
+  facebook_posted?: boolean
+  facebook_post_url?: string
 }
 
 export interface Appointment {

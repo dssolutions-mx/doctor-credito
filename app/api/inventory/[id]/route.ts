@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser, unauthorizedResponse } from '@/lib/api-helpers'
+import { deleteAllVehicleImages } from '@/lib/storage-helpers'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user, error: authError } = await getAuthenticatedUser()
@@ -13,6 +14,7 @@ export async function GET(
     }
 
     const supabase = await createClient()
+    const { id } = await params
 
     // Get vehicle with related data
     const { data: vehicle, error } = await supabase
@@ -22,8 +24,8 @@ export async function GET(
         dealer:dealers(
           id,
           name,
-          phone,
-          email,
+          contact_phone,
+          contact_email,
           address,
           city,
           state
@@ -39,10 +41,10 @@ export async function GET(
           id,
           scheduled_at,
           status,
-          type
+          appointment_type
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -66,7 +68,7 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user, error: authError } = await getAuthenticatedUser()
@@ -76,6 +78,7 @@ export async function PUT(
 
     const body = await request.json()
     const supabase = await createClient()
+    const { id } = await params
 
     // Build update object (only include provided fields)
     const updates: any = {}
@@ -99,7 +102,7 @@ export async function PUT(
     const { data: vehicle, error } = await supabase
       .from('vehicles')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -124,7 +127,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user, error: authError } = await getAuthenticatedUser()
@@ -133,12 +136,13 @@ export async function DELETE(
     }
 
     const supabase = await createClient()
+    const { id } = await params
 
     // Check if vehicle has any leads or appointments
     const { data: vehicle, error: fetchError } = await supabase
       .from('vehicles')
-      .select('lead_count, appointment_count')
-      .eq('id', params.id)
+      .select('lead_count, appointment_count, image_urls')
+      .eq('id', id)
       .single()
 
     if (fetchError) {
@@ -162,11 +166,20 @@ export async function DELETE(
       )
     }
 
+    // Delete images from storage before deleting vehicle
+    if (vehicle.image_urls && Array.isArray(vehicle.image_urls) && vehicle.image_urls.length > 0) {
+      const { error: imageError } = await deleteAllVehicleImages(id)
+      if (imageError) {
+        console.error('Error deleting vehicle images:', imageError)
+        // Continue with vehicle deletion even if image deletion fails
+      }
+    }
+
     // Delete vehicle
     const { error: deleteError } = await supabase
       .from('vehicles')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (deleteError) {
       console.error('Error deleting vehicle:', deleteError)

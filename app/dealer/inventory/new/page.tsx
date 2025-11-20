@@ -166,7 +166,7 @@ export default function NewVehiclePage() {
 
         // Step 3: Update vehicle with image URLs
         if (urls.length > 0) {
-          await fetch(`/api/inventory/${vehicle.id}`, {
+          const updateResponse = await fetch(`/api/inventory/${vehicle.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -174,6 +174,20 @@ export default function NewVehiclePage() {
               primary_image_url: urls[0],
             }),
           })
+
+          if (!updateResponse.ok) {
+            // If image update fails, delete the vehicle to rollback
+            await fetch(`/api/inventory/${vehicle.id}`, {
+              method: "DELETE",
+            })
+            throw new Error("Error al actualizar imágenes. El vehículo no fue creado.")
+          }
+        } else if (errors.length === images.length) {
+          // All images failed, rollback vehicle creation
+          await fetch(`/api/inventory/${vehicle.id}`, {
+            method: "DELETE",
+          })
+          throw new Error("Error al subir imágenes. El vehículo no fue creado.")
         }
       }
 

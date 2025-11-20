@@ -32,12 +32,14 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
 
   if (!vehicle) return null
 
+  const vehicleImages = vehicle.images || vehicle.image_urls || []
+  
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % vehicle.images.length)
+    setCurrentImageIndex((prev) => (prev + 1) % vehicleImages.length)
   }
 
   const previousImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + vehicle.images.length) % vehicle.images.length)
+    setCurrentImageIndex((prev) => (prev - 1 + vehicleImages.length) % vehicleImages.length)
   }
 
   const handleStatusUpdate = async (newStatus: string) => {
@@ -106,12 +108,12 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
           {/* Image Gallery */}
           <div className="relative aspect-[16/9] bg-muted rounded-lg overflow-hidden">
             <Image
-              src={vehicle.images[currentImageIndex] || "/placeholder.svg"}
+              src={(vehicle.images || vehicle.image_urls || [])[currentImageIndex] || vehicle.primary_image_url || "/placeholder.svg"}
               alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
               fill
               className="object-cover"
             />
-            {vehicle.images.length > 1 && (
+            {(vehicle.images || vehicle.image_urls || []).length > 1 && (
               <>
                 <Button
                   variant="secondary"
@@ -130,7 +132,7 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
                   <ChevronRight className="h-4 w-4" />
                 </Button>
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                  {vehicle.images.map((_, idx) => (
+                  {(vehicle.images || vehicle.image_urls || []).map((_, idx) => (
                     <div
                       key={idx}
                       className={`h-1.5 rounded-full transition-all ${

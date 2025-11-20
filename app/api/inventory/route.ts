@@ -26,8 +26,8 @@ export async function GET(request: Request) {
         dealer:dealers(
           id,
           name,
-          phone,
-          email
+          contact_phone,
+          contact_email
         )
       `)
       .order('created_at', { ascending: false })
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
         `year.eq.${search},` +
         `make.ilike.%${search}%,` +
         `model.ilike.%${search}%,` +
-        `stock.ilike.%${search}%,` +
+        `stock_number.ilike.%${search}%,` +
         `vin.ilike.%${search}%`
       )
     }

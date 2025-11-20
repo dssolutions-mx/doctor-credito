@@ -11,9 +11,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ImageUploader } from "@/components/image-uploader"
-import { uploadMultipleVehicleImages } from "@/lib/storage-helpers"
+import { uploadMultipleVehicleImages, deleteVehicleImage } from "@/lib/storage-helpers"
 import { useVehicle } from "@/hooks/use-supabase-data"
-import { Loader2, Save, X, Plus } from "lucide-react"
+import { Loader2, Save, X, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface ImageFile {
@@ -30,6 +30,7 @@ export default function EditVehiclePage() {
   const { vehicle, loading: loadingVehicle, error: loadError } = useVehicle(vehicleId)
   const [loading, setLoading] = useState(false)
   const [images, setImages] = useState<ImageFile[]>([])
+  const [deletingImageIndex, setDeletingImageIndex] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     vin: "",
     stock_number: "",
@@ -105,6 +106,48 @@ export default function EditVehiclePage() {
       ...prev,
       features: prev.features.filter((_, i) => i !== index),
     }))
+  }
+
+  const handleDeleteExistingImage = async (imageUrl: string, index: number) => {
+    if (!vehicle) return
+
+    try {
+      setDeletingImageIndex(index)
+      
+      // Delete from storage
+      const { success, error: deleteError } = await deleteVehicleImage(imageUrl)
+      
+      if (!success || deleteError) {
+        throw new Error(deleteError || "Error al eliminar la imagen")
+      }
+
+      // Update vehicle's image_urls array
+      const updatedImages = vehicle.image_urls.filter((url: string, i: number) => i !== index)
+      const newPrimaryImage = updatedImages.length > 0 ? updatedImages[0] : null
+
+      const response = await fetch(`/api/inventory/${vehicleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image_urls: updatedImages,
+          primary_image_url: newPrimaryImage,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al actualizar vehículo")
+      }
+
+      toast.success("Imagen eliminada exitosamente")
+      // Reload vehicle data
+      window.location.reload()
+    } catch (error) {
+      console.error("Error deleting image:", error)
+      toast.error(error instanceof Error ? error.message : "Error al eliminar la imagen")
+    } finally {
+      setDeletingImageIndex(null)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,13 +305,26 @@ export default function EditVehiclePage() {
                   <Label className="mb-2 block">Imágenes Actuales</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
                     {vehicle.image_urls.map((url: string, index: number) => (
-                      <div key={index} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                      <div key={index} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden group">
                         <img src={url} alt={`Vehicle ${index + 1}`} className="w-full h-full object-cover" />
                         {index === 0 && (
                           <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
                             Principal
                           </div>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExistingImage(url, index)}
+                          disabled={deletingImageIndex === index}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                          title="Eliminar imagen"
+                        >
+                          {deletingImageIndex === index ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </button>
                       </div>
                     ))}
                   </div>
