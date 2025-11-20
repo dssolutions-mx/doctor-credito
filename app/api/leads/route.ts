@@ -38,6 +38,19 @@ export async function GET(request: Request) {
             credit_situation,
             urgency_indicators
           )
+        ),
+        vehicle:vehicles(
+          id,
+          year,
+          make,
+          model,
+          trim,
+          price,
+          mileage,
+          stock_number,
+          primary_image_url,
+          exterior_color,
+          status
         )
       `)
       .order('created_at', { ascending: false })

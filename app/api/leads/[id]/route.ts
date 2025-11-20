@@ -31,6 +31,23 @@ export async function GET(
           ),
           conversation_context(*)
         ),
+        vehicle:vehicles(
+          id,
+          year,
+          make,
+          model,
+          trim,
+          price,
+          sale_price,
+          mileage,
+          stock_number,
+          primary_image_url,
+          image_urls,
+          exterior_color,
+          interior_color,
+          transmission,
+          status
+        ),
         interactions(
           id,
           type,
