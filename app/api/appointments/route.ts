@@ -38,6 +38,19 @@ export async function GET(request: Request) {
           name,
           contact_name,
           contact_phone
+        ),
+        vehicle:vehicles(
+          id,
+          year,
+          make,
+          model,
+          trim,
+          price,
+          mileage,
+          stock_number,
+          primary_image_url,
+          exterior_color,
+          status
         )
       `)
       .order('scheduled_at', { ascending: true })

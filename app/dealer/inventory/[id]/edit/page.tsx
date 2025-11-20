@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ImageUploader } from "@/components/image-uploader"
 import { uploadMultipleVehicleImages } from "@/lib/storage-helpers"
+import { useVehicle } from "@/hooks/use-supabase-data"
 import { Loader2, Save, X, Plus } from "lucide-react"
 import { toast } from "sonner"
 
@@ -21,14 +22,15 @@ interface ImageFile {
   id: string
 }
 
-export default function NewVehiclePage() {
+export default function EditVehiclePage() {
   const router = useRouter()
+  const params = useParams()
+  const vehicleId = params.id as string
+
+  const { vehicle, loading: loadingVehicle, error: loadError } = useVehicle(vehicleId)
   const [loading, setLoading] = useState(false)
   const [images, setImages] = useState<ImageFile[]>([])
-
-  // Form state
   const [formData, setFormData] = useState({
-    // Basic Info
     vin: "",
     stock_number: "",
     year: new Date().getFullYear(),
@@ -36,8 +38,6 @@ export default function NewVehiclePage() {
     model: "",
     trim: "",
     body_style: "",
-
-    // Specifications
     transmission: "",
     fuel_type: "",
     drivetrain: "",
@@ -45,23 +45,47 @@ export default function NewVehiclePage() {
     interior_color: "",
     engine: "",
     mileage: "",
-
-    // Pricing
     cost: "",
     price: "",
     sale_price: "",
-
-    // Marketing
     marketing_title: "",
     description: "",
     features: [] as string[],
-
-    // Status
     status: "available",
     condition: "used",
   })
 
   const [newFeature, setNewFeature] = useState("")
+
+  // Load vehicle data when available
+  useEffect(() => {
+    if (vehicle) {
+      setFormData({
+        vin: vehicle.vin || "",
+        stock_number: vehicle.stock_number || "",
+        year: vehicle.year || new Date().getFullYear(),
+        make: vehicle.make || "",
+        model: vehicle.model || "",
+        trim: vehicle.trim || "",
+        body_style: vehicle.body_style || "",
+        transmission: vehicle.transmission || "",
+        fuel_type: vehicle.fuel_type || "",
+        drivetrain: vehicle.drivetrain || "",
+        exterior_color: vehicle.exterior_color || "",
+        interior_color: vehicle.interior_color || "",
+        engine: vehicle.engine || "",
+        mileage: vehicle.mileage?.toString() || "",
+        cost: vehicle.cost?.toString() || "",
+        price: vehicle.price?.toString() || "",
+        sale_price: vehicle.sale_price?.toString() || "",
+        marketing_title: vehicle.marketing_title || "",
+        description: vehicle.description || "",
+        features: vehicle.features || [],
+        status: vehicle.status || "available",
+        condition: vehicle.condition || "used",
+      })
+    }
+  }, [vehicle])
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -111,8 +135,8 @@ export default function NewVehiclePage() {
     try {
       setLoading(true)
 
-      // Step 1: Create vehicle first
-      const vehiclePayload = {
+      // Prepare update payload
+      const updatePayload: any = {
         vin: formData.vin.trim(),
         stock_number: formData.stock_number.trim(),
         year: formData.year,
@@ -137,26 +161,13 @@ export default function NewVehiclePage() {
         condition: formData.condition,
       }
 
-      const response = await fetch("/api/inventory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(vehiclePayload),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Error al crear el vehículo")
-      }
-
-      const { vehicle } = await response.json()
-
-      // Step 2: Upload images if any
+      // Upload new images if any
       if (images.length > 0) {
-        toast.info("Subiendo imágenes...")
+        toast.info("Subiendo nuevas imágenes...")
 
         const { urls, errors } = await uploadMultipleVehicleImages(
           images.map((img) => img.file),
-          vehicle.id
+          vehicleId
         )
 
         if (errors.length > 0) {
@@ -164,34 +175,77 @@ export default function NewVehiclePage() {
           toast.warning(`${errors.length} imagen(es) no se pudieron subir`)
         }
 
-        // Step 3: Update vehicle with image URLs
+        // Merge with existing images
         if (urls.length > 0) {
-          await fetch(`/api/inventory/${vehicle.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              image_urls: urls,
-              primary_image_url: urls[0],
-            }),
-          })
+          const existingImages = vehicle?.image_urls || []
+          const allImages = [...existingImages, ...urls]
+          updatePayload.image_urls = allImages
+          updatePayload.primary_image_url = allImages[0]
         }
       }
 
-      toast.success("Vehículo creado exitosamente")
+      // Update vehicle
+      const response = await fetch(`/api/inventory/${vehicleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatePayload),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al actualizar el vehículo")
+      }
+
+      toast.success("Vehículo actualizado exitosamente")
       router.push("/dealer/inventory")
     } catch (error) {
-      console.error("Error creating vehicle:", error)
-      toast.error(error instanceof Error ? error.message : "Error al crear el vehículo")
+      console.error("Error updating vehicle:", error)
+      toast.error(error instanceof Error ? error.message : "Error al actualizar el vehículo")
     } finally {
       setLoading(false)
     }
   }
 
+  // Loading state
+  if (loadingVehicle) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Editar Vehículo" subtitle="Cargando..." />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando vehículo...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (loadError || !vehicle) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Editar Vehículo" subtitle="Error" />
+        <div className="flex-1 flex items-center justify-center">
+          <GlassCard className="max-w-md">
+            <CardContent className="py-12 text-center">
+              <p className="text-destructive font-medium mb-2">Error al cargar vehículo</p>
+              <p className="text-sm text-muted-foreground">{loadError || "Vehículo no encontrado"}</p>
+              <Button className="mt-4" onClick={() => router.push("/dealer/inventory")}>
+                Volver al Inventario
+              </Button>
+            </CardContent>
+          </GlassCard>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
       <DashboardHeader
-        title="Agregar Vehículo"
-        subtitle="Completa la información del vehículo"
+        title="Editar Vehículo"
+        subtitle={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
       />
 
       <div className="flex-1 p-6 overflow-y-auto">
@@ -201,8 +255,31 @@ export default function NewVehiclePage() {
             <CardHeader>
               <CardTitle>Imágenes del Vehículo</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ImageUploader images={images} onChange={setImages} maxImages={10} />
+            <CardContent className="space-y-4">
+              {/* Existing Images */}
+              {vehicle.image_urls && vehicle.image_urls.length > 0 && (
+                <div>
+                  <Label className="mb-2 block">Imágenes Actuales</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    {vehicle.image_urls.map((url: string, index: number) => (
+                      <div key={index} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                        <img src={url} alt={`Vehicle ${index + 1}`} className="w-full h-full object-cover" />
+                        {index === 0 && (
+                          <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                            Principal
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* New Images */}
+              <div>
+                <Label className="mb-2 block">Agregar Nuevas Imágenes</Label>
+                <ImageUploader images={images} onChange={setImages} maxImages={10} />
+              </div>
             </CardContent>
           </GlassCard>
 
@@ -571,7 +648,7 @@ export default function NewVehiclePage() {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Guardar Vehículo
+                  Guardar Cambios
                 </>
               )}
             </Button>

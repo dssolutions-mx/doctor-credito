@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Car, Edit, Trash2 } from "lucide-react"
-import { mockVehicles } from "@/lib/mock-data"
+import { Plus, Car, Loader2 } from "lucide-react"
+import { useVehicles } from "@/hooks/use-supabase-data"
 import { VehicleCard } from "@/components/vehicle-card"
 import { VehicleDetailDialog } from "@/components/vehicle-detail-dialog"
 import type { Vehicle } from "@/lib/types"
@@ -21,36 +21,82 @@ export default function DealerInventoryPage() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Fetch vehicles from database
+  const { vehicles, loading, error } = useVehicles()
+
   const handleVehicleClick = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle)
     setIsDialogOpen(true)
   }
 
   // Get unique makes for filter
-  const makes = Array.from(new Set(mockVehicles.map((v) => v.make))).sort()
+  const makes = useMemo(() => {
+    return Array.from(new Set(vehicles.map((v: any) => v.make))).sort()
+  }, [vehicles])
 
-  // Filter vehicles (dealer sees only their vehicles)
-  const filteredVehicles = mockVehicles.filter((vehicle) => {
-    if (filterMake !== "all" && vehicle.make !== filterMake) return false
-    if (filterStatus !== "all" && vehicle.status !== filterStatus) return false
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      const searchText =
-        `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim} ${vehicle.stock}`.toLowerCase()
-      if (!searchText.includes(query)) return false
-    }
-    return true
-  })
+  // Filter vehicles
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter((vehicle: any) => {
+      if (filterMake !== "all" && vehicle.make !== filterMake) return false
+      if (filterStatus !== "all" && vehicle.status !== filterStatus) return false
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        const searchText =
+          `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} ${vehicle.stock_number}`.toLowerCase()
+        if (!searchText.includes(query)) return false
+      }
+      return true
+    })
+  }, [vehicles, filterMake, filterStatus, searchQuery])
 
   // Calculate stats
-  const stats = {
-    total: mockVehicles.length,
-    available: mockVehicles.filter((v) => v.status === "available").length,
-    pending: mockVehicles.filter((v) => v.status === "pending").length,
-    sold: mockVehicles.filter((v) => v.status === "sold").length,
+  const stats = useMemo(() => {
+    return {
+      total: vehicles.length,
+      available: vehicles.filter((v: any) => v.status === "available").length,
+      pending: vehicles.filter((v: any) => v.status === "pending").length,
+      sold: vehicles.filter((v: any) => v.status === "sold").length,
+    }
+  }, [vehicles])
+
+  const totalValue = useMemo(() => {
+    return vehicles
+      .filter((v: any) => v.status !== "sold")
+      .reduce((sum: number, v: any) => sum + (v.price || 0), 0)
+  }, [vehicles])
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Inventario" subtitle="Cargando..." />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando inventario...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const totalValue = mockVehicles.filter((v) => v.status !== "sold").reduce((sum, v) => sum + v.price, 0)
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex flex-col h-full">
+        <DashboardHeader title="Inventario" subtitle="Error" />
+        <div className="flex-1 flex items-center justify-center">
+          <GlassCard className="max-w-md">
+            <CardContent className="py-12 text-center">
+              <Car className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <p className="text-destructive font-medium mb-2">Error al cargar inventario</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </CardContent>
+          </GlassCard>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -146,17 +192,30 @@ export default function DealerInventoryPage() {
         </GlassCard>
 
         {/* Vehicle Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredVehicles.map((vehicle) => (
-            <VehicleCard key={vehicle.id} vehicle={vehicle} onViewDetails={handleVehicleClick} />
-          ))}
-        </div>
-
-        {filteredVehicles.length === 0 && (
+        {filteredVehicles.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredVehicles.map((vehicle: any) => (
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={{
+                  ...vehicle,
+                  images: vehicle.image_urls || [],
+                  stock: vehicle.stock_number,
+                  color: vehicle.exterior_color || 'N/A',
+                }}
+                onViewDetails={handleVehicleClick}
+              />
+            ))}
+          </div>
+        ) : (
           <GlassCard>
             <CardContent className="py-12 text-center">
               <Car className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No se encontraron vehículos que coincidan con tus filtros</p>
+              <p className="text-muted-foreground">
+                {vehicles.length === 0
+                  ? 'No hay vehículos en el inventario. Agrega tu primer vehículo.'
+                  : 'No se encontraron vehículos que coincidan con tus filtros'}
+              </p>
             </CardContent>
           </GlassCard>
         )}

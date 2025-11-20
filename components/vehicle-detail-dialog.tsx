@@ -1,12 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import type { Vehicle } from "@/lib/types"
-import { Gauge, Calendar, Palette, Hash, ChevronLeft, ChevronRight } from "lucide-react"
+import { Gauge, Calendar, Palette, Hash, ChevronLeft, ChevronRight, Edit, Facebook, Trash2, CheckCircle, XCircle } from "lucide-react"
+import { toast } from "sonner"
 import Image from "next/image"
 
 interface VehicleDetailDialogProps {
@@ -22,7 +25,10 @@ const statusConfig = {
 }
 
 export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDetailDialogProps) {
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [updating, setUpdating] = useState(false)
 
   if (!vehicle) return null
 
@@ -32,6 +38,53 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
 
   const previousImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + vehicle.images.length) % vehicle.images.length)
+  }
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    try {
+      setUpdating(true)
+      const response = await fetch(`/api/inventory/${vehicle.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al actualizar estado")
+      }
+
+      toast.success(`Vehículo marcado como ${newStatus === 'available' ? 'disponible' : newStatus === 'pending' ? 'pendiente' : 'vendido'}`)
+      onOpenChange(false)
+      window.location.reload() // Refresh to show updated data
+    } catch (error) {
+      console.error("Error updating status:", error)
+      toast.error(error instanceof Error ? error.message : "Error al actualizar estado")
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/inventory/${vehicle.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Error al eliminar vehículo")
+      }
+
+      toast.success("Vehículo eliminado exitosamente")
+      setShowDeleteDialog(false)
+      onOpenChange(false)
+      router.push("/dealer/inventory")
+      window.location.reload()
+    } catch (error) {
+      console.error("Error deleting vehicle:", error)
+      toast.error(error instanceof Error ? error.message : "Error al eliminar vehículo")
+    }
   }
 
   return (
@@ -171,27 +224,108 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
             </TabsContent>
 
             <TabsContent value="actions" className="space-y-3">
-              <Button className="w-full" size="lg">
-                Asignar a Lead
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/dealer/inventory/${vehicle.id}/edit`)
+                }}
+                disabled={updating}
+              >
+                <Edit className="h-4 w-4" />
+                Editar Vehículo
               </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Programar Prueba de Manejo
+              <Button
+                variant="outline"
+                className="w-full bg-transparent gap-2"
+                size="lg"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/dealer/inventory/${vehicle.id}/post-facebook`)
+                }}
+                disabled={updating}
+              >
+                <Facebook className="h-4 w-4" />
+                Publicar en Facebook
               </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Imprimir Hoja de Especificaciones
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Compartir Vehículo
-              </Button>
-              {vehicle.status === "available" && (
-                <Button variant="secondary" className="w-full" size="lg">
-                  Marcar como Pendiente
+
+              <div className="pt-2 border-t">
+                <p className="text-xs text-muted-foreground mb-2">Cambiar Estado</p>
+                <div className="space-y-2">
+                  {vehicle.status !== "available" && (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 bg-transparent"
+                      size="sm"
+                      onClick={() => handleStatusUpdate("available")}
+                      disabled={updating}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Marcar como Disponible
+                    </Button>
+                  )}
+                  {vehicle.status !== "pending" && (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 bg-transparent"
+                      size="sm"
+                      onClick={() => handleStatusUpdate("pending")}
+                      disabled={updating}
+                    >
+                      <Calendar className="h-4 w-4" />
+                      Marcar como Pendiente
+                    </Button>
+                  )}
+                  {vehicle.status !== "sold" && (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 bg-transparent"
+                      size="sm"
+                      onClick={() => handleStatusUpdate("sold")}
+                      disabled={updating}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Marcar como Vendido
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  variant="destructive"
+                  className="w-full gap-2"
+                  size="lg"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={updating}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Eliminar Vehículo
                 </Button>
-              )}
+              </div>
             </TabsContent>
           </Tabs>
         </div>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El vehículo será eliminado permanentemente del inventario.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

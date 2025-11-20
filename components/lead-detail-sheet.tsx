@@ -7,11 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Phone, Mail, MessageSquare, User, DollarSign, Car, Clock, Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Phone, Mail, MessageSquare, User, DollarSign, Car, Clock, Plus, Gauge, ExternalLink } from "lucide-react"
 import type { Lead } from "@/lib/types"
 import { LeadStatusBadge } from "./lead-status-badge"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import Image from "next/image"
+import Link from "next/link"
 
 interface LeadDetailSheetProps {
   lead: Lead | null
@@ -129,6 +132,80 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                       <p className="text-[15px] leading-[20px] font-medium">{lead.budget}</p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Linked Vehicle */}
+              {(lead as any).vehicle && (
+                <div className="space-y-4">
+                  <h3 className="text-[17px] leading-[24px] font-semibold text-foreground">Vehículo de Interés</h3>
+                  <div className="glass-section p-4 space-y-3">
+                    <div className="flex gap-4">
+                      {/* Vehicle Image */}
+                      {(lead as any).vehicle.primary_image_url && (
+                        <div className="relative w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                          <Image
+                            src={(lead as any).vehicle.primary_image_url}
+                            alt={`${(lead as any).vehicle.year} ${(lead as any).vehicle.make} ${(lead as any).vehicle.model}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {/* Vehicle Info */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <p className="text-[15px] leading-[20px] font-semibold">
+                            {(lead as any).vehicle.year} {(lead as any).vehicle.make} {(lead as any).vehicle.model}
+                          </p>
+                          {(lead as any).vehicle.trim && (
+                            <p className="text-[13px] leading-[18px] text-muted-foreground">{(lead as any).vehicle.trim}</p>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[13px] leading-[18px]">
+                          <div className="flex items-center gap-1.5">
+                            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="font-semibold text-primary">
+                              ${((lead as any).vehicle.sale_price || (lead as any).vehicle.price).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">
+                              {(lead as any).vehicle.mileage.toLocaleString()} mi
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            Stock: {(lead as any).vehicle.stock_number}
+                          </Badge>
+                          {(lead as any).vehicle.status === 'available' ? (
+                            <Badge variant="default" className="text-xs">Disponible</Badge>
+                          ) : (lead as any).vehicle.status === 'sold' ? (
+                            <Badge variant="outline" className="text-xs">Vendido</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">Pendiente</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Link href={`/dealer/inventory/${(lead as any).vehicle.id}/edit`}>
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Ver Detalles del Vehículo
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="grid gap-5">
 
                   <div>
                     <Label className="text-[13px] leading-[18px] font-semibold text-muted-foreground">Asignado a</Label>

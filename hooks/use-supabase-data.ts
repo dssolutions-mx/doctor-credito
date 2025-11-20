@@ -145,7 +145,7 @@ export function useConversations(withPhone?: boolean, status?: string) {
       try {
         setLoading(true)
         setError(null)
-        
+
         const params = new URLSearchParams()
         if (withPhone !== undefined) params.append('with_phone', withPhone.toString())
         if (status) params.append('status', status)
@@ -154,14 +154,14 @@ export function useConversations(withPhone?: boolean, status?: string) {
         const response = await fetch(url, {
           cache: 'no-store',
         })
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.error || `Failed to fetch conversations: ${response.statusText}`)
         }
 
         const data = await response.json()
-        
+
         // Ensure we always have an array
         if (!Array.isArray(data.conversations)) {
           console.warn('Conversations API returned non-array data:', data)
@@ -172,7 +172,7 @@ export function useConversations(withPhone?: boolean, status?: string) {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error'
         setError(errorMessage)
-        
+
         // Retry logic for transient errors
         if (retryCount < maxRetries && (errorMessage.includes('fetch') || errorMessage.includes('network'))) {
           retryCount++
@@ -208,4 +208,73 @@ export function useConversations(withPhone?: boolean, status?: string) {
         setLoading(false)
       })
   } }
+}
+
+export function useVehicles(status?: string, make?: string, dealerId?: string) {
+  const [vehicles, setVehicles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (status) params.append('status', status)
+      if (make) params.append('make', make)
+      if (dealerId) params.append('dealer_id', dealerId)
+
+      const url = `/api/inventory${params.toString() ? `?${params}` : ''}`
+      const response = await fetch(url, { cache: 'no-store' })
+
+      if (!response.ok) throw new Error('Failed to fetch vehicles')
+
+      const data = await response.json()
+      setVehicles(data.vehicles || [])
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchVehicles()
+  }, [status, make, dealerId, refreshKey])
+
+  const refetch = () => {
+    setRefreshKey(prev => prev + 1)
+  }
+
+  return { vehicles, loading, error, refetch }
+}
+
+export function useVehicle(id: string) {
+  const [vehicle, setVehicle] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/inventory/${id}`)
+        if (!response.ok) throw new Error('Failed to fetch vehicle')
+
+        const data = await response.json()
+        setVehicle(data.vehicle)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (id) {
+      fetchVehicle()
+    }
+  }, [id])
+
+  return { vehicle, loading, error }
 }
