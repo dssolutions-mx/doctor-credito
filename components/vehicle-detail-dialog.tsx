@@ -1,12 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Vehicle } from "@/lib/types"
-import { Gauge, Calendar, Palette, Hash, ChevronLeft, ChevronRight } from "lucide-react"
+import { Gauge, Calendar, Palette, Hash, ChevronLeft, ChevronRight, Edit, Facebook } from "lucide-react"
 import Image from "next/image"
 
 interface VehicleDetailDialogProps {
@@ -22,6 +23,7 @@ const statusConfig = {
 }
 
 export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDetailDialogProps) {
+  const router = useRouter()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   if (!vehicle) return null
@@ -171,17 +173,28 @@ export function VehicleDetailDialog({ vehicle, open, onOpenChange }: VehicleDeta
             </TabsContent>
 
             <TabsContent value="actions" className="space-y-3">
-              <Button className="w-full" size="lg">
-                Asignar a Lead
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/dealer/inventory/${vehicle.id}/edit`)
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                Editar Vehículo
               </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Programar Prueba de Manejo
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Imprimir Hoja de Especificaciones
-              </Button>
-              <Button variant="outline" className="w-full bg-transparent" size="lg">
-                Compartir Vehículo
+              <Button
+                variant="outline"
+                className="w-full bg-transparent gap-2"
+                size="lg"
+                onClick={() => {
+                  onOpenChange(false)
+                  router.push(`/dealer/inventory/${vehicle.id}/post-facebook`)
+                }}
+              >
+                <Facebook className="h-4 w-4" />
+                Publicar en Facebook
               </Button>
               {vehicle.status === "available" && (
                 <Button variant="secondary" className="w-full" size="lg">
