@@ -10,6 +10,7 @@ import { Plus, CalendarIcon, List, Clock, CheckCircle2 } from "lucide-react"
 import { useAppointments } from "@/hooks/use-supabase-data"
 import { AppointmentCalendar } from "@/components/appointment-calendar"
 import { AppointmentDetailDialog } from "@/components/appointment-detail-dialog"
+import { CreateAppointmentDialog } from "@/components/create-appointment-dialog"
 import type { Appointment } from "@/lib/types"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -41,6 +42,7 @@ export default function AppointmentsPage() {
   const { appointments: rawAppointments, loading, error } = useAppointments()
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   // Transform database appointments to component format
   const appointments = (rawAppointments || []).map((apt: any) => ({
@@ -55,6 +57,9 @@ export default function AppointmentsPage() {
     status: apt.status || "programada",
     assignedTo: apt.lead?.assigned_user?.full_name || apt.lead?.assigned_user?.email || "Sin asignar",
     notes: apt.notes || "",
+    // Pass full objects for detail view
+    customerPhone: apt.lead?.phone,
+    leadId: apt.lead_id
   }))
 
   const handleAppointmentClick = (appointment: any) => {
@@ -155,7 +160,10 @@ export default function AppointmentsPage() {
                 <CardTitle>Calendario</CardTitle>
                 <CardDescription>Administra tus citas y calendario</CardDescription>
               </div>
-              <Button className="rounded-2xl h-11">
+              <Button 
+                className="rounded-2xl h-11"
+                onClick={() => setIsCreateDialogOpen(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nueva Cita
               </Button>
@@ -248,7 +256,19 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Appointment Detail Dialog */}
-      <AppointmentDetailDialog appointment={selectedAppointment} open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <AppointmentDetailDialog 
+        appointment={selectedAppointment} 
+        open={isDialogOpen} 
+        onOpenChange={setIsDialogOpen} 
+        onUpdate={() => window.location.reload()}
+      />
+
+      {/* Create Appointment Dialog */}
+      <CreateAppointmentDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   )
 }

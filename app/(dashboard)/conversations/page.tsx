@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useConversations } from "@/hooks/use-supabase-data"
-import { Phone, MessageSquare, CheckCircle, Clock, UserPlus, Sparkles, Search, AlertCircle } from "lucide-react"
+import { Phone, MessageSquare, CheckCircle, Clock, UserPlus, Sparkles, Search, AlertCircle, Loader2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
 import { useRouter } from "next/navigation"
@@ -21,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { toast } from "sonner"
 import { ConversationDetailDialog } from "@/components/conversation-detail-dialog"
 
@@ -34,9 +36,17 @@ export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isConverting, setIsConverting] = useState(false)
-  const [manualPhone, setManualPhone] = useState("")
   const [viewingConversation, setViewingConversation] = useState<any>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+
+  // Conversion Form State
+  const [conversionData, setConversionData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    notes: ""
+  })
+  const [duplicateError, setDuplicateError] = useState<{ id: string } | null>(null)
 
   // Fetch all conversations
   const { conversations: allConversations, loading, refetch } = useConversations(undefined, undefined)
@@ -77,32 +87,57 @@ export default function ConversationsPage() {
     return filtered
   }, [allConversations, activeTab, searchTerm])
 
-  const handleConvertToLead = async (conversation: any, phoneOverride?: string) => {
+  const handleConvertToLead = async () => {
     setIsConverting(true)
+    setDuplicateError(null)
+
     try {
-      // If conversation doesn't have phone and no override provided, show error
-      if (!conversation.phone_number && !phoneOverride) {
+      if (!conversionData.phone) {
         toast.error("Por favor ingresa un número de teléfono")
         setIsConverting(false)
         return
       }
 
-      const response = await fetch('/api/leads/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversation_id: conversation.id,
-        }),
-      })
+      // Extract context data
+      const context = selectedConversation?.conversation_context?.[0] || {}
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || 'Failed to create lead')
+      const payload = {
+        conversation_id: selectedConversation.id,
+        name: conversionData.name || "Lead sin nombre",
+        phone: conversionData.phone,
+        // Email in metadata
+        source: selectedConversation.platform || 'facebook',
+        vehicle_interest: context.vehicle_interest,
+        budget_range: context.budget_range,
+        status: 'new',
+        urgency_level: selectedConversation.urgency || 'medium',
+        notes: conversionData.notes,
+        metadata: {
+            email: conversionData.email,
+            credit_situation: context.credit_situation,
+        }
       }
 
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
       const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) {
+            setDuplicateError({ id: data.lead_id })
+            toast.error("Este número de teléfono ya está registrado")
+            setIsConverting(false)
+            return
+        }
+        throw new Error(data.error || 'Failed to create lead')
+      }
+
       setIsDialogOpen(false)
-      setManualPhone("")
+      setConversionData({ name: "", email: "", phone: "", notes: "" })
       toast.success("Lead creado exitosamente")
       
       // Refetch conversations
@@ -120,7 +155,14 @@ export default function ConversationsPage() {
 
   const openConversionDialog = (conversation: any) => {
     setSelectedConversation(conversation)
-    setManualPhone(conversation.phone_number || "")
+    const context = conversation.conversation_context?.[0]
+    setConversionData({
+        name: "", // Can try to extract name from messages later if needed
+        email: "",
+        phone: conversation.phone_number || "",
+        notes: context?.notes || ""
+    })
+    setDuplicateError(null)
     setIsDialogOpen(true)
   }
 
@@ -129,9 +171,6 @@ export default function ConversationsPage() {
     media: "bg-warning",
     baja: "bg-muted",
   }
-
-  const hasPhone = selectedConversation?.phone_number
-  const hasLead = selectedConversation?.leads && selectedConversation.leads.length > 0
 
   return (
     <div className="flex flex-col h-full">
@@ -339,30 +378,14 @@ export default function ConversationsPage() {
                           {/* Actions */}
                           <div className="flex md:flex-col gap-2 flex-shrink-0">
                             {!hasExistingLead ? (
-                              <>
-                                <Button
-                                  className="rounded-2xl"
-                                  onClick={() => openConversionDialog(conversation)}
-                                  disabled={isConverting}
-                                >
-                                  <UserPlus className="h-4 w-4 mr-2" />
-                                  {conversation.phone_number ? "Crear Lead" : "Crear Lead"}
-                                </Button>
-                                {conversation.phone_number && (
-                                  <Button
-                                    variant="outline"
-                                    className="rounded-2xl"
-                                    onClick={() => {
-                                      // Quick create - auto-create lead
-                                      handleConvertToLead(conversation)
-                                    }}
-                                    disabled={isConverting}
-                                  >
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    Crear Rápido
-                                  </Button>
-                                )}
-                              </>
+                              <Button
+                                className="rounded-2xl"
+                                onClick={() => openConversionDialog(conversation)}
+                                disabled={isConverting}
+                              >
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Crear Lead
+                              </Button>
                             ) : (
                               <Button
                                 variant="outline"
@@ -398,90 +421,103 @@ export default function ConversationsPage() {
         </Tabs>
       </div>
 
-      {/* Conversion Confirmation Dialog */}
+      {/* Conversion Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Convertir Conversación a Lead</DialogTitle>
             <DialogDescription>
-              {hasPhone 
-                ? "Esto creará un nuevo lead con la información capturada de la conversación y generará automáticamente una tarea urgente para llamar al cliente."
-                : "Ingresa el número de teléfono para crear el lead. Se generará automáticamente una tarea urgente para contactar al cliente."}
+              Completa la información para crear el lead. Se generará una tarea urgente de seguimiento.
             </DialogDescription>
           </DialogHeader>
 
+          {duplicateError && (
+             <Alert variant="destructive">
+               <AlertCircle className="h-4 w-4" />
+               <AlertTitle>Lead Duplicado</AlertTitle>
+               <AlertDescription className="flex items-center gap-2 mt-2">
+                 Este número ya existe.
+                 <Button variant="outline" size="sm" onClick={() => router.push(`/leads/${duplicateError.id}`)}>
+                    Ver Lead Existente
+                 </Button>
+               </AlertDescription>
+             </Alert>
+          )}
+
           {selectedConversation && (
             <div className="space-y-4 py-4">
-              {!hasPhone && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Número de teléfono *</label>
-                  <Input
-                    placeholder="+1 234 567 8900"
-                    value={manualPhone}
-                    onChange={(e) => setManualPhone(e.target.value)}
-                    className="h-11"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    El teléfono es requerido para crear el lead
-                  </p>
-                </div>
-              )}
+              <div className="grid gap-4 md:grid-cols-2">
+                 <div className="space-y-2">
+                    <Label htmlFor="conv-name">Nombre</Label>
+                    <Input 
+                        id="conv-name"
+                        value={conversionData.name}
+                        onChange={e => setConversionData({...conversionData, name: e.target.value})}
+                        placeholder="Nombre completo"
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="conv-email">Email</Label>
+                    <Input 
+                        id="conv-email"
+                        type="email"
+                        value={conversionData.email}
+                        onChange={e => setConversionData({...conversionData, email: e.target.value})}
+                        placeholder="email@ejemplo.com"
+                    />
+                 </div>
+              </div>
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Teléfono:</span>
-                  <p className="font-medium">{hasPhone ? selectedConversation.phone_number : manualPhone || "No proporcionado"}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Plataforma:</span>
-                  <p className="font-medium capitalize">{selectedConversation.platform || 'Facebook'}</p>
-                </div>
-                {selectedConversation.conversation_context?.[0]?.vehicle_interest && (
-                  <div>
-                    <span className="text-muted-foreground">Vehículo de interés:</span>
-                    <p className="font-medium">{selectedConversation.conversation_context[0].vehicle_interest}</p>
-                  </div>
-                )}
-                {selectedConversation.urgency && (
-                  <div>
-                    <span className="text-muted-foreground">Urgencia:</span>
-                    <p className="font-medium capitalize">{selectedConversation.urgency}</p>
-                  </div>
-                )}
+              <div className="space-y-2">
+                 <Label htmlFor="conv-phone">Teléfono *</Label>
+                 <Input 
+                    id="conv-phone"
+                    value={conversionData.phone}
+                    onChange={e => setConversionData({...conversionData, phone: e.target.value})}
+                    placeholder="+1 234 567 8900"
+                    disabled={!!selectedConversation.phone_number} // Disable if came from system? Or allow edit? Better allow edit if needed, but maybe with warning. For now allow edit.
+                    // Actually, if system has phone, it's safer to keep it, but maybe they typed it wrong.
+                 />
+              </div>
+
+              <div className="space-y-2">
+                 <Label htmlFor="conv-notes">Notas (extraídas de conversación)</Label>
+                 <Textarea 
+                    id="conv-notes"
+                    value={conversionData.notes}
+                    onChange={e => setConversionData({...conversionData, notes: e.target.value})}
+                    rows={4}
+                 />
               </div>
 
               <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Se creará automáticamente:</p>
-                <ul className="text-sm space-y-1">
-                  <li>✓ Lead con status "nuevo"</li>
-                  <li>✓ Tarea urgente: "Llamar a nuevo lead" (vence en 5 minutos)</li>
-                  <li>✓ Vinculación al historial de conversación</li>
-                </ul>
+                <p className="text-xs text-muted-foreground mb-1">Resumen del sistema:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <span className="font-semibold">Vehículo:</span> {selectedConversation.conversation_context?.[0]?.vehicle_interest || 'N/A'}
+                    </div>
+                    <div>
+                        <span className="font-semibold">Presupuesto:</span> {selectedConversation.conversation_context?.[0]?.budget_range || 'N/A'}
+                    </div>
+                </div>
               </div>
             </div>
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsDialogOpen(false)
-              setManualPhone("")
-            }} disabled={isConverting}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isConverting}>
               Cancelar
             </Button>
             <Button
-              onClick={() => {
-                if (selectedConversation) {
-                  if (!hasPhone && !manualPhone) {
-                    toast.error("Por favor ingresa un número de teléfono")
-                    return
-                  }
-                  // If manual phone provided, update conversation first (or just use it in lead creation)
-                  handleConvertToLead(selectedConversation, manualPhone || undefined)
-                }
-              }}
-              disabled={isConverting || (!hasPhone && !manualPhone)}
+              onClick={handleConvertToLead}
+              disabled={isConverting || !conversionData.phone}
             >
-              {isConverting ? 'Creando...' : 'Crear Lead'}
+              {isConverting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creando...
+                  </>
+              ) : 'Crear Lead'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -31,12 +31,14 @@ import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { formatDistanceToNow } from "date-fns"
 import { es } from "date-fns/locale"
+import { LeadStatusUpdateDialog } from "@/components/lead-status-update-dialog"
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { lead, loading, error } = useLead(id)
   const [showCallModal, setShowCallModal] = useState(false)
   const [showTaskDialog, setShowTaskDialog] = useState(false)
+  const [showStatusDialog, setShowStatusDialog] = useState(false)
 
   if (loading) {
     return (
@@ -68,7 +70,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     id: lead.id,
     name: lead.name || "Sin nombre",
     phone: lead.phone || "Sin teléfono",
-    email: lead.source || "",
+    email: lead.metadata?.email || lead.source || "", // Try metadata first
     source: lead.source || "unknown",
     status: lead.status || "nuevo",
     urgency_level: lead.urgency_level || "media",
@@ -460,7 +462,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <Car className="h-4 w-4" />
                   Compartir Vehículo
                 </Button>
-                <Button variant="outline" className="justify-start gap-2 text-success bg-transparent">
+                <Button 
+                    variant="outline" 
+                    className="justify-start gap-2 text-success bg-transparent"
+                    onClick={() => setShowStatusDialog(true)}
+                >
                   <CheckCircle2 className="h-4 w-4" />
                   Marcar Venta Cerrada
                 </Button>
@@ -484,6 +490,16 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         leadName={leadData.name}
         onSuccess={() => {
           // Optionally refresh lead data or show success message
+        }}
+      />
+
+      <LeadStatusUpdateDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        leadId={leadData.id}
+        newStatus="closed"
+        onSuccess={() => {
+            window.location.reload()
         }}
       />
     </div>

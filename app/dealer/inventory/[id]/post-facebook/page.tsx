@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useVehicle } from "@/hooks/use-supabase-data"
-import { Loader2, Copy, Check, Facebook, ExternalLink, Image as ImageIcon } from "lucide-react"
+import { Loader2, Copy, Check, Facebook, ExternalLink, Image as ImageIcon, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function PostFacebookPage() {
   const router = useRouter()
@@ -24,45 +25,90 @@ export default function PostFacebookPage() {
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [facebookUrl, setFacebookUrl] = useState("")
+  const [postText, setPostText] = useState("")
+  const [template, setTemplate] = useState("standard")
 
   // Generate Facebook post text
-  const generatePostText = () => {
+  const generatePostText = (type: string = "standard") => {
     if (!vehicle) return ""
 
     const title = vehicle.marketing_title || `${vehicle.year} ${vehicle.make} ${vehicle.model}`
     const price = vehicle.sale_price || vehicle.price
     const features = vehicle.features || []
+    
+    let post = ""
 
-    let post = `🚗 ${title}\n\n`
-    post += `💰 Precio: $${price.toLocaleString()}\n`
-    post += `📍 Kilometraje: ${vehicle.mileage.toLocaleString()} millas\n`
-
-    if (vehicle.exterior_color) {
-      post += `🎨 Color: ${vehicle.exterior_color}\n`
+    if (type === "standard") {
+        post = `🚗 ${title}\n\n`
+        post += `💰 Precio: $${price.toLocaleString()}\n`
+        post += `📍 Kilometraje: ${vehicle.mileage.toLocaleString()} millas\n`
+    
+        if (vehicle.exterior_color) {
+          post += `🎨 Color: ${vehicle.exterior_color}\n`
+        }
+        if (vehicle.transmission) {
+          post += `⚙️ Transmisión: ${vehicle.transmission}\n`
+        }
+    
+        if (features.length > 0) {
+          post += `\n✨ Características:\n`
+          features.slice(0, 5).forEach((feature: string) => {
+            post += `• ${feature}\n`
+          })
+        }
+    
+        if (vehicle.description) {
+          post += `\n${vehicle.description}\n`
+        }
+    
+        post += `\n📞 ¡Contáctanos hoy mismo!\n`
+        post += `📱 Llama o envía WhatsApp para más información\n`
+        post += `\n#${vehicle.make} #${vehicle.model} #AutosUsados #CarrosEnVenta #Financing #BadCredit #NoCredit #Baltimore #Maryland`
+    } else if (type === "short") {
+        post = `🔥 OFERTA ESPECIAL: ${title} 🔥\n\n`
+        post += `✅ Solo $${price.toLocaleString()}\n`
+        post += `✅ ${vehicle.mileage.toLocaleString()} millas\n`
+        post += `✅ Financiamiento Disponible\n\n`
+        post += `¡Envía mensaje ahora para prueba de manejo! 🚗💨`
+    } else if (type === "detailed") {
+        post = `📢 EN VENTA: ${title.toUpperCase()}\n`
+        post += `▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n\n`
+        post += `💲 PRECIO: $${price.toLocaleString()}\n`
+        if (vehicle.cost && vehicle.sale_price && vehicle.sale_price < vehicle.price) {
+            post += `📉 (Antes: $${vehicle.price.toLocaleString()})\n`
+        }
+        post += `\n📋 DETALLES:\n`
+        post += `🔹 Año: ${vehicle.year}\n`
+        post += `🔹 Marca: ${vehicle.make}\n`
+        post += `🔹 Modelo: ${vehicle.model}\n`
+        post += `🔹 Millas: ${vehicle.mileage.toLocaleString()}\n`
+        post += `🔹 Transmisión: ${vehicle.transmission || 'N/A'}\n`
+        post += `🔹 Motor: ${vehicle.engine || 'N/A'}\n`
+        post += `🔹 VIN: ${vehicle.vin}\n\n`
+        
+        if (features.length > 0) {
+            post += `✨ EQUIPAMIENTO:\n`
+            features.forEach((feature: string) => {
+                post += `✔️ ${feature}\n`
+            })
+            post += `\n`
+        }
+        
+        post += `📝 DESCRIPCIÓN:\n${vehicle.description || 'Vehículo en excelentes condiciones, inspeccionado y listo para su nuevo dueño.'}\n\n`
+        post += `📍 VISÍTANOS:\n[Nombre del Dealer]\n[Dirección]\n\n`
+        post += `📞 CONTACTO:\n[Teléfono]\n\n`
+        post += `#${vehicle.make.replace(/\s/g, '')} #${vehicle.model.replace(/\s/g, '')} #VentaDeAutos #DealerConfianza`
     }
-    if (vehicle.transmission) {
-      post += `⚙️ Transmisión: ${vehicle.transmission}\n`
-    }
-
-    if (features.length > 0) {
-      post += `\n✨ Características:\n`
-      features.slice(0, 5).forEach((feature: string) => {
-        post += `• ${feature}\n`
-      })
-    }
-
-    if (vehicle.description) {
-      post += `\n${vehicle.description}\n`
-    }
-
-    post += `\n📞 ¡Contáctanos hoy mismo!\n`
-    post += `📱 Llama o envía WhatsApp para más información\n`
-    post += `\n#${vehicle.make} #${vehicle.model} #AutosUsados #CarrosEnVenta #Financing #BadCredit #NoCredit #Baltimore #Maryland`
 
     return post
   }
 
-  const postText = generatePostText()
+  // Update text when vehicle loads or template changes
+  useEffect(() => {
+    if (vehicle) {
+        setPostText(generatePostText(template))
+    }
+  }, [vehicle, template])
 
   const handleCopyText = () => {
     navigator.clipboard.writeText(postText)
@@ -246,35 +292,50 @@ export default function PostFacebookPage() {
           {/* Generated Post Text */}
           <GlassCard>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <CardTitle>Texto para Facebook</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyText}
-                  className="gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Copiado
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      Copiar Texto
-                    </>
-                  )}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Select value={template} onValueChange={setTemplate}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Seleccionar plantilla" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="standard">Estándar</SelectItem>
+                            <SelectItem value="short">Corto y Llamativo</SelectItem>
+                            <SelectItem value="detailed">Detallado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyText}
+                    className="gap-2"
+                    >
+                    {copied ? (
+                        <>
+                        <Check className="h-4 w-4" />
+                        Copiado
+                        </>
+                    ) : (
+                        <>
+                        <Copy className="h-4 w-4" />
+                        Copiar Texto
+                        </>
+                    )}
+                    </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={postText}
-                readOnly
+                onChange={(e) => setPostText(e.target.value)}
                 rows={15}
                 className="font-mono text-sm"
               />
+              <p className="text-xs text-muted-foreground mt-2">
+                  Puedes editar el texto antes de copiarlo.
+              </p>
             </CardContent>
           </GlassCard>
 
@@ -291,7 +352,7 @@ export default function PostFacebookPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium">Copia el texto de arriba</p>
-                    <p className="text-sm text-muted-foreground">Usa el botón "Copiar Texto"</p>
+                    <p className="text-sm text-muted-foreground">Usa el botón "Copiar Texto" después de elegir tu plantilla favorita.</p>
                   </div>
                 </div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-export function useLeads(status?: string) {
+export function useLeads(status?: string, search?: string) {
   const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -11,9 +11,11 @@ export function useLeads(status?: string) {
     const fetchLeads = async () => {
       try {
         setLoading(true)
-        const url = status
-          ? `/api/leads?status=${status}`
-          : '/api/leads'
+        const params = new URLSearchParams()
+        if (status) params.append('status', status)
+        if (search) params.append('search', search)
+          
+        const url = `/api/leads${params.toString() ? `?${params}` : ''}`
 
         const response = await fetch(url)
         if (!response.ok) throw new Error('Failed to fetch leads')
@@ -28,7 +30,7 @@ export function useLeads(status?: string) {
     }
 
     fetchLeads()
-  }, [status])
+  }, [status, search])
 
   return { leads, loading, error, refetch: () => {} }
 }
