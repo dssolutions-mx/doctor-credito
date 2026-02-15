@@ -96,6 +96,23 @@ export async function POST(request: Request) {
       // Don't fail the request if task creation fails
     }
 
+    // 5. Send new lead email alert via Edge Function (fire-and-forget)
+    if (finalAssignedTo) {
+      import('@/lib/invoke-edge-function').then(({ invokeEdgeFunction }) => {
+        invokeEdgeFunction('send-new-lead-alert', {
+          agent_user_id: finalAssignedTo,
+          lead: {
+            id: lead.id,
+            name: lead.name,
+            phone: lead.phone,
+            vehicle_interest: lead.vehicle_interest,
+            source: lead.source,
+            urgency_level: lead.urgency_level,
+          },
+        })
+      })
+    }
+
     return NextResponse.json({ lead })
   } catch (error) {
     console.error('Unexpected error:', error)

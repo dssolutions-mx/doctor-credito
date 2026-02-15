@@ -268,8 +268,8 @@ export function CallLoggingModal({ open, onOpenChange, leadId, leadName, onCompl
         }
 
         case "appointment": {
-          // Redirect to appointment booking with lead pre-filled
-          router.push(`/appointments/book?lead_id=${leadId}`)
+          // Redirect to appointments page with create dialog open and lead pre-filled
+          router.push(`/appointments?new=1&lead_id=${leadId}`)
           break
         }
       }

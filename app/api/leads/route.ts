@@ -145,22 +145,39 @@ export async function POST(request: Request) {
     }
 
     // 2. Prepare Data
-    // Ensure we don't try to insert undefined values for required/optional fields
-    const leadData = {
+    const statusVal = body.status || 'nuevo'
+    const leadData: Record<string, unknown> = {
       conversation_id: body.conversation_id || null,
       name: body.name,
       phone: body.phone,
       source: body.source,
-      vehicle_interest: body.vehicle_interest, 
+      vehicle_interest: body.vehicle_interest,
       budget_range: body.budget_range,
-      status: body.status || 'new',
-      urgency_level: body.urgency_level || 'medium',
+      status: statusVal === 'new' ? 'nuevo' : statusVal,
+      urgency_level: body.urgency_level || 'media',
       notes: body.notes,
-      assigned_to: body.assigned_to || user.id, // Assign to creator or specified
+      assigned_to: body.assigned_to || user.id,
+      occupation: body.occupation || null,
+      address: body.address || null,
+      city: body.city || null,
+      state: body.state || null,
+      credit_type: body.credit_type || null,
+      down_payment_amount: body.down_payment_amount ?? null,
+      has_cosigner: body.has_cosigner ?? false,
+      has_other_employment: body.has_other_employment ?? null,
+      has_company: body.has_company ?? null,
+      company_name: body.company_name || null,
+      has_driver_license: body.has_driver_license ?? null,
+      has_id: body.has_id ?? null,
+      has_passport: body.has_passport ?? null,
+      has_ssn: body.has_ssn ?? null,
+      has_tax_id: body.has_tax_id ?? null,
+      vehicle_id: body.vehicle_id || null,
       metadata: {
-        vehicle_id: body.vehicle_id, // Link to inventory
-        trade_in: body.trade_in, // { year, make, model, ... }
-        financing_type: body.financing_type, // 'cash', 'finance', 'lease'
+        vehicle_id: body.vehicle_id,
+        trade_in: body.trade_in,
+        financing_type: body.financing_type,
+        email: body.metadata?.email,
         ...body.metadata
       }
     }
@@ -195,9 +212,26 @@ export async function POST(request: Request) {
         task_type: 'call',
         priority: lead.urgency_level === 'urgent' ? 'urgent' : 'high',
         due_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins
-        status: 'pending',
+        status: 'pendiente',
         auto_generated: true
     })
+
+    // 6. Send new lead email alert via Edge Function (fire-and-forget)
+    if (lead.assigned_to) {
+      import('@/lib/invoke-edge-function').then(({ invokeEdgeFunction }) => {
+        invokeEdgeFunction('send-new-lead-alert', {
+          agent_user_id: lead.assigned_to,
+          lead: {
+            id: lead.id,
+            name: lead.name,
+            phone: lead.phone,
+            vehicle_interest: lead.vehicle_interest,
+            source: lead.source,
+            urgency_level: lead.urgency_level,
+          },
+        })
+      })
+    }
 
     return NextResponse.json({ lead }, { status: 201 })
   } catch (error) {

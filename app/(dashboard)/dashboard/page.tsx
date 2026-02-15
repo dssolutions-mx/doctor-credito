@@ -3,7 +3,7 @@
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Calendar, Car, TrendingUp, Phone, MessageSquare, CheckCircle2, Clock } from "lucide-react"
+import { Users, Calendar, Car, TrendingUp, Phone, CheckCircle2, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -189,13 +189,16 @@ export default function DashboardPage() {
                           <span className="text-[13px] leading-[18px] text-muted-foreground whitespace-nowrap">
                             {lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: true, locale: es }) : 'Reciente'}
                           </span>
-                          <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl">
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
+                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                            {lead.phone && (
+                              <a
+                                href={`tel:${lead.phone}`}
+                                className="inline-flex items-center justify-center h-9 w-9 rounded-xl hover:bg-accent"
+                                title="Llamar"
+                              >
+                                <Phone className="h-4 w-4" />
+                              </a>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -284,20 +287,18 @@ export default function DashboardPage() {
                           <span>Agregar Nuevo Lead</span>
                         </Button>
                       </Link>
-                      <Link href="/appointments/book">
+                      <Link href="/appointments?new=1">
                         <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
                           <Calendar className="h-5 w-5" />
                           <span>Agendar Cita</span>
                         </Button>
                       </Link>
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
-                <Phone className="h-5 w-5" />
-                <span>Registrar Llamada</span>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
-                <MessageSquare className="h-5 w-5" />
-                <span>Enviar Mensaje</span>
-              </Button>
+              <Link href="/leads">
+                <Button variant="outline" className="w-full justify-start gap-3 h-12 bg-transparent rounded-2xl text-[15px] leading-[20px] font-medium">
+                  <Phone className="h-5 w-5" />
+                  <span>Ver Leads</span>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </GlassCard>

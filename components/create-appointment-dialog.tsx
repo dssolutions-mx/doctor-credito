@@ -18,9 +18,12 @@ interface CreateAppointmentDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSuccess?: () => void
+    initialLeadId?: string
+    initialDate?: string
+    initialTime?: string
 }
 
-export function CreateAppointmentDialog({ open, onOpenChange, onSuccess }: CreateAppointmentDialogProps) {
+export function CreateAppointmentDialog({ open, onOpenChange, onSuccess, initialLeadId, initialDate, initialTime }: CreateAppointmentDialogProps) {
     const [isLoading, setIsLoading] = useState(false)
     
     // Form State
@@ -43,6 +46,14 @@ export function CreateAppointmentDialog({ open, onOpenChange, onSuccess }: Creat
         const timer = setTimeout(() => setDebouncedLeadSearch(leadSearch), 500)
         return () => clearTimeout(timer)
     }, [leadSearch])
+
+    useEffect(() => {
+        if (open) {
+            if (initialLeadId) setLeadId(initialLeadId)
+            if (initialDate) setDate(initialDate)
+            if (initialTime) setTime(initialTime)
+        }
+    }, [open, initialLeadId, initialDate, initialTime])
 
     const { leads, loading: leadsLoading } = useLeads(undefined, debouncedLeadSearch)
     const { vehicles } = useVehicles("available")
@@ -292,3 +303,6 @@ export function CreateAppointmentDialog({ open, onOpenChange, onSuccess }: Creat
         </Dialog>
     )
 }
+
+
+

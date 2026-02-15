@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -39,10 +40,29 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 }
 
 export default function AppointmentsPage() {
+  const searchParams = useSearchParams()
   const { appointments: rawAppointments, loading, error } = useAppointments()
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [initialLeadId, setInitialLeadId] = useState<string | undefined>()
+  const [initialDate, setInitialDate] = useState<string | undefined>()
+  const [initialTime, setInitialTime] = useState<string | undefined>()
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1" || searchParams.get("lead_id")) {
+      setIsCreateDialogOpen(true)
+      const leadId = searchParams.get("lead_id")
+      if (leadId) setInitialLeadId(leadId)
+    }
+  }, [searchParams])
+
+  const handleEmptySlotClick = (date: Date, hour: number) => {
+    setInitialDate(format(date, "yyyy-MM-dd"))
+    setInitialTime(`${hour.toString().padStart(2, "0")}:00`)
+    setInitialLeadId(undefined)
+    setIsCreateDialogOpen(true)
+  }
 
   // Transform database appointments to component format
   const appointments = (rawAppointments || []).map((apt: any) => ({
@@ -183,14 +203,11 @@ export default function AppointmentsPage() {
               </TabsList>
 
               <TabsContent value="calendar" className="space-y-4">
-                {appointments.length > 0 ? (
-                  <AppointmentCalendar appointments={appointments} onAppointmentClick={handleAppointmentClick} />
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <CalendarIcon className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p>No hay citas programadas</p>
-                  </div>
-                )}
+                <AppointmentCalendar
+                  appointments={appointments}
+                  onAppointmentClick={handleAppointmentClick}
+                  onEmptySlotClick={handleEmptySlotClick}
+                />
               </TabsContent>
 
               <TabsContent value="list" className="space-y-3">
@@ -268,6 +285,9 @@ export default function AppointmentsPage() {
         open={isCreateDialogOpen} 
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={() => window.location.reload()}
+        initialLeadId={initialLeadId}
+        initialDate={initialDate}
+        initialTime={initialTime}
       />
     </div>
   )

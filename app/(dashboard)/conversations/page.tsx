@@ -98,23 +98,50 @@ export default function ConversationsPage() {
         return
       }
 
-      // Extract context data
       const context = selectedConversation?.conversation_context?.[0] || {}
+
+      const creditMap: Record<string, string> = {
+        bueno: 'bueno', good: 'bueno', excellent: 'bueno',
+        regular: 'regular', fair: 'regular',
+        malo: 'malo', poor: 'malo', bad: 'malo',
+        first_time: 'first_time_buyer', firsttime: 'first_time_buyer',
+      }
+      const creditVal = context.credit_situation?.toLowerCase?.()
+      const credit_type = creditVal ? creditMap[creditVal] || (creditVal.includes('first') ? 'first_time_buyer' : null) : null
+
+      const downPaymentNum = context.down_payment_capacity ? parseFloat(String(context.down_payment_capacity).replace(/[^0-9.-]/g, '')) : NaN
+      const down_payment_amount = !isNaN(downPaymentNum) ? downPaymentNum : null
+
+      let city: string | null = null
+      let state: string | null = null
+      const loc = context.location
+      if (typeof loc === 'string' && loc.includes(',')) {
+        const parts = loc.split(',').map((p: string) => p.trim())
+        if (parts.length >= 2) {
+          city = parts[0] || null
+          state = parts[1] || null
+        }
+      } else if (loc) {
+        state = String(loc)
+      }
 
       const payload = {
         conversation_id: selectedConversation.id,
         name: conversionData.name || "Lead sin nombre",
         phone: conversionData.phone,
-        // Email in metadata
         source: selectedConversation.platform || 'facebook',
         vehicle_interest: context.vehicle_interest,
         budget_range: context.budget_range,
-        status: 'new',
-        urgency_level: selectedConversation.urgency || 'medium',
+        status: 'nuevo',
+        urgency_level: selectedConversation.urgency || 'media',
         notes: conversionData.notes,
+        credit_type,
+        down_payment_amount,
+        city,
+        state,
         metadata: {
-            email: conversionData.email,
-            credit_situation: context.credit_situation,
+          email: conversionData.email,
+          credit_situation: context.credit_situation,
         }
       }
 

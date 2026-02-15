@@ -44,13 +44,19 @@ export default function NewLeadPage() {
     lastName: "",
     email: "",
     phone: "",
+    occupation: "",
+    state: "",
+    city: "",
     source: "",
     priority: "medium",
-    vehicleInterest: "", // Text fallback or selected vehicle name
+    vehicleInterest: "",
     vehicleId: "",
     budget: "",
     notes: "",
-    financing: "finance", // cash, finance, lease
+    creditType: "" as string,
+    downPayment: "",
+    hasCosigner: false,
+    financing: "finance",
     tradeIn: false,
     tradeInYear: "",
     tradeInMake: "",
@@ -84,12 +90,18 @@ export default function NewLeadPage() {
       const payload = {
         name: `${formData.firstName} ${formData.lastName}`.trim(),
         phone: formData.phone,
-        // Email stored in metadata as per schema limitations
         source: formData.source,
-        urgency_level: formData.priority === 'urgent' ? 'urgent' : formData.priority === 'high' ? 'high' : 'medium',
+        urgency_level: formData.priority === 'urgent' ? 'urgent' : formData.priority === 'high' ? 'high' : 'media',
         vehicle_interest: formData.vehicleInterest,
         budget_range: formData.budget,
         notes: formData.notes,
+        occupation: formData.occupation || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        credit_type: formData.creditType || null,
+        down_payment_amount: formData.downPayment ? parseFloat(formData.downPayment.replace(/[^0-9.-]/g, '')) : null,
+        has_cosigner: formData.hasCosigner,
+        vehicle_id: formData.vehicleId || null,
         metadata: {
             email: formData.email,
             vehicle_id: formData.vehicleId,
@@ -214,6 +226,105 @@ export default function NewLeadPage() {
                       />
                     </div>
                   </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="occupation">Ocupación</Label>
+                      <Input 
+                        id="occupation" 
+                        value={formData.occupation}
+                        onChange={e => setFormData({...formData, occupation: e.target.value})}
+                        placeholder="Ej: Mesero, Enfermera, Autónomo" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">Estado</Label>
+                      <Input 
+                        id="state" 
+                        value={formData.state}
+                        onChange={e => setFormData({...formData, state: e.target.value})}
+                        placeholder="Florida" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Ciudad</Label>
+                      <Input 
+                        id="city" 
+                        value={formData.city}
+                        onChange={e => setFormData({...formData, city: e.target.value})}
+                        placeholder="Miami" 
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Crédito y Presupuesto */}
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Crédito y Presupuesto</h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="creditType">Crédito</Label>
+                      <Select value={formData.creditType} onValueChange={v => setFormData({...formData, creditType: v})}>
+                        <SelectTrigger id="creditType">
+                          <SelectValue placeholder="Seleccionar..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="malo">Malo</SelectItem>
+                          <SelectItem value="regular">Regular</SelectItem>
+                          <SelectItem value="bueno">Bueno</SelectItem>
+                          <SelectItem value="first_time_buyer">First Time Buyer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="budget">Presupuesto</Label>
+                      <Input 
+                        id="budget" 
+                        value={formData.budget}
+                        onChange={e => setFormData({...formData, budget: e.target.value})}
+                        placeholder="$20,000 - $25,000" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="downPayment">Enganche / Down Payment</Label>
+                      <Input 
+                        id="downPayment" 
+                        type="text"
+                        value={formData.downPayment}
+                        onChange={e => setFormData({...formData, downPayment: e.target.value})}
+                        placeholder="$5,000" 
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="hasCosigner" 
+                      checked={formData.hasCosigner}
+                      onCheckedChange={(checked) => setFormData({...formData, hasCosigner: checked as boolean})}
+                    />
+                    <Label htmlFor="hasCosigner" className="cursor-pointer">Tiene co-signer</Label>
+                  </div>
+                  <div className="space-y-3 pt-2">
+                    <Label>Tipo de Compra</Label>
+                    <RadioGroup 
+                      value={formData.financing} 
+                      onValueChange={v => setFormData({...formData, financing: v})}
+                      className="flex flex-col sm:flex-row gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="finance" id="finance" />
+                        <Label htmlFor="finance">Financiamiento</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cash" id="cash" />
+                        <Label htmlFor="cash">Contado</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="lease" id="lease" />
+                        <Label htmlFor="lease">Leasing</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
 
                 {/* Lead Details */}
@@ -303,40 +414,7 @@ export default function NewLeadPage() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="budget">Presupuesto</Label>
-                      <Input 
-                        id="budget" 
-                        value={formData.budget}
-                        onChange={e => setFormData({...formData, budget: e.target.value})}
-                        placeholder="$20,000 - $25,000" 
-                      />
-                    </div>
                   </div>
-
-                   {/* Financing */}
-                   <div className="space-y-3 pt-2">
-                        <Label>Tipo de Compra</Label>
-                        <RadioGroup 
-                            defaultValue="finance" 
-                            value={formData.financing} 
-                            onValueChange={v => setFormData({...formData, financing: v})}
-                            className="flex flex-col sm:flex-row gap-4"
-                        >
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="finance" id="finance" />
-                                <Label htmlFor="finance">Financiamiento</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="cash" id="cash" />
-                                <Label htmlFor="cash">Contado</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="lease" id="lease" />
-                                <Label htmlFor="lease">Leasing</Label>
-                            </div>
-                        </RadioGroup>
-                   </div>
                 </div>
 
                 {/* Trade-in Section */}

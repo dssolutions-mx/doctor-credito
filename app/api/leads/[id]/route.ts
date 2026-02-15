@@ -32,6 +32,9 @@ export async function GET(
           conversation_context(*)
         ),
         vehicle:vehicles(*),
+        lead_employments(*),
+        lead_bank_accounts(*),
+        lead_vehicle_interests(*),
         interactions(
           id,
           type,
@@ -137,12 +140,27 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
+    const ALLOWED_FIELDS = [
+      'conversation_id', 'name', 'phone', 'source', 'vehicle_interest', 'budget_range',
+      'status', 'credit_score_range', 'credit_type', 'down_payment_available', 'down_payment_amount',
+      'urgency_level', 'last_contact_at', 'next_follow_up_at', 'follow_up_count', 'assigned_to',
+      'dealer_id', 'deal_closed_at', 'deal_amount', 'commission_amount', 'notes',
+      'occupation', 'address', 'city', 'state',
+      'has_other_employment', 'has_company', 'company_name', 'has_cosigner',
+      'has_driver_license', 'has_id', 'has_passport', 'has_ssn', 'has_tax_id',
+      'vehicle_id', 'metadata'
+    ] as const
+
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    for (const key of ALLOWED_FIELDS) {
+      if (key in body) {
+        updateData[key] = body[key]
+      }
+    }
+
     const { data: lead, error } = await supabase
       .from('leads')
-      .update({
-        ...body,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()

@@ -29,6 +29,7 @@ export default function LeadsPage() {
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [filterSource, setFilterSource] = useState("all")
+  const [filterCreditType, setFilterCreditType] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
 
   const handleCall = (e: React.MouseEvent, lead: any) => {
@@ -37,9 +38,17 @@ export default function LeadsPage() {
     setIsCallModalOpen(true)
   }
 
+  const creditTypeLabels: Record<string, string> = {
+    malo: "Malo",
+    regular: "Regular",
+    bueno: "Bueno",
+    first_time_buyer: "FTB",
+  }
+
   const filteredLeads = (leads || []).filter((lead) => {
     if (filterStatus !== "all" && lead.status !== filterStatus) return false
     if (filterSource !== "all" && lead.source !== filterSource) return false
+    if (filterCreditType !== "all" && (lead as any).credit_type !== filterCreditType) return false
     if (searchTerm) {
       const search = searchTerm.toLowerCase()
       return (
@@ -96,6 +105,18 @@ export default function LeadsPage() {
                   <SelectItem value="walkin">Visita Directa</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={filterCreditType} onValueChange={setFilterCreditType}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Crédito" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="malo">Malo</SelectItem>
+                  <SelectItem value="regular">Regular</SelectItem>
+                  <SelectItem value="bueno">Bueno</SelectItem>
+                  <SelectItem value="first_time_buyer">First Time Buyer</SelectItem>
+                </SelectContent>
+              </Select>
               <Button asChild>
                 <Link href="/conversations">
                   <Plus className="h-4 w-4 mr-2" />
@@ -140,6 +161,11 @@ export default function LeadsPage() {
                           </h3>
                           <div className="flex items-center gap-2 flex-wrap">
                             <LeadStatusBadge status={lead.status || 'nuevo'} />
+                            {(lead as any).credit_type && (
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-muted">
+                                {creditTypeLabels[(lead as any).credit_type] || (lead as any).credit_type}
+                              </span>
+                            )}
                             <span className="text-xs text-muted-foreground capitalize truncate">{lead.source || 'facebook'}</span>
                             {lead.urgency_level && (
                               <>
@@ -164,9 +190,17 @@ export default function LeadsPage() {
                           )}
                         </div>
 
-                        {lead.budget_range && (
+                        {(lead.budget_range || (lead as any).down_payment_amount) && (
                           <div className="flex items-center gap-2 text-sm min-w-0">
-                            <span className="text-muted-foreground truncate">Presupuesto: {lead.budget_range}</span>
+                            <span className="text-muted-foreground truncate">
+                              Presupuesto: {lead.budget_range || "—"}
+                              {(lead as any).down_payment_amount && ` • Enganche: $${Number((lead as any).down_payment_amount).toLocaleString()}`}
+                            </span>
+                          </div>
+                        )}
+                        {((lead as any).city || (lead as any).state) && (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {(lead as any).city}{(lead as any).city && (lead as any).state ? ", " : ""}{(lead as any).state}
                           </div>
                         )}
 

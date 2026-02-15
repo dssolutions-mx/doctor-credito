@@ -20,13 +20,16 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single()
 
-    const preferences = profile?.metadata?.notification_preferences || {
+    const defaults = {
       newLeadNotifications: true,
       appointmentReminders: true,
       followUpReminders: true,
       emailNotifications: false,
+      immediateEmailAlerts: true,
       smsNotifications: true,
     }
+    const stored = profile?.metadata?.notification_preferences || {}
+    const preferences = { ...defaults, ...stored }
 
     return NextResponse.json({ preferences })
   } catch (error) {

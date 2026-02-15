@@ -24,6 +24,13 @@ interface TaskCreationDialogProps {
   leadId?: string
   leadName?: string
   onSuccess?: () => void
+  initialValues?: {
+    title?: string
+    task_type?: string
+    priority?: string
+    due_at?: string
+    due_time?: string
+  }
 }
 
 export function TaskCreationDialog({
@@ -32,6 +39,7 @@ export function TaskCreationDialog({
   leadId,
   leadName,
   onSuccess,
+  initialValues,
 }: TaskCreationDialogProps) {
   const { user } = useAuthStore()
   const [loading, setLoading] = useState(false)
@@ -45,20 +53,32 @@ export function TaskCreationDialog({
     assigned_to: user?.id || "",
   })
 
-  // Reset form when modal opens/closes
   useEffect(() => {
     if (open) {
-      setFormData({
-        title: "",
-        description: "",
-        task_type: "llamar",
-        priority: "media",
-        due_at: "",
-        due_time: "",
-        assigned_to: user?.id || "",
-      })
+      if (initialValues) {
+        const due = initialValues.due_at ? new Date(initialValues.due_at) : null
+        setFormData({
+          title: initialValues.title || (leadName ? `Llamar a ${leadName}` : "Llamar a lead"),
+          description: "",
+          task_type: initialValues.task_type || "llamar",
+          priority: initialValues.priority || "media",
+          due_at: due ? due.toISOString().slice(0, 10) : "",
+          due_time: initialValues.due_time || (due ? due.toTimeString().slice(0, 5) : ""),
+          assigned_to: user?.id || "",
+        })
+      } else {
+        setFormData({
+          title: leadName ? `Llamar a ${leadName}` : "",
+          description: "",
+          task_type: "llamar",
+          priority: "media",
+          due_at: "",
+          due_time: "",
+          assigned_to: user?.id || "",
+        })
+      }
     }
-  }, [open, user?.id])
+  }, [open, user?.id, leadId, leadName, initialValues])
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {

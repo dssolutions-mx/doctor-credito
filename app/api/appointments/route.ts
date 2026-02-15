@@ -141,6 +141,31 @@ export async function POST(request: Request) {
         .eq('id', appointment.lead_id)
     }
 
+    // Send appointment-created email alert via Edge Function (fire-and-forget)
+    if (appointment.lead_id) {
+      supabase
+        .from('leads')
+        .select('id, name, assigned_to')
+        .eq('id', appointment.lead_id)
+        .single()
+        .then(({ data: lead }) => {
+          const assignedTo = lead?.assigned_to
+          if (!assignedTo) return
+          import('@/lib/invoke-edge-function').then(({ invokeEdgeFunction }) => {
+            invokeEdgeFunction('send-appointment-created', {
+              agent_user_id: assignedTo,
+              appointment: {
+                id: appointment.id,
+                scheduled_at: appointment.scheduled_at,
+                appointment_type: appointment.appointment_type,
+              },
+              lead_name: lead?.name ?? null,
+            })
+          })
+        })
+        .catch((err) => console.error('[email] Appointment created alert failed:', err))
+    }
+
     return NextResponse.json({ appointment })
   } catch (error) {
     console.error('Unexpected error:', error)

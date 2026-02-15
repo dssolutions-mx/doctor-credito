@@ -18,6 +18,47 @@ export default function TasksPage() {
   const { tasks: allTasks, loading, refetch } = useTasks('pendiente')
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null)
   const [showTaskDialog, setShowTaskDialog] = useState(false)
+  const [taskTemplate, setTaskTemplate] = useState<{
+    title: string
+    task_type: string
+    due_at: string
+    due_time?: string
+  } | null>(null)
+
+  const openWithTemplate = (template: "llamar_24h" | "seguimiento_3d" | "enviar_info") => {
+    const now = new Date()
+    if (template === "llamar_24h") {
+      const due = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+      setTaskTemplate({
+        title: "Llamar a lead",
+        task_type: "llamar",
+        due_at: due.toISOString(),
+        due_time: due.toTimeString().slice(0, 5),
+      })
+    } else if (template === "seguimiento_3d") {
+      const due = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000)
+      setTaskTemplate({
+        title: "Seguimiento",
+        task_type: "seguimiento",
+        due_at: due.toISOString(),
+        due_time: "10:00",
+      })
+    } else {
+      const due = new Date(now.getTime() + 2 * 60 * 60 * 1000)
+      setTaskTemplate({
+        title: "Enviar información",
+        task_type: "enviar_info",
+        due_at: due.toISOString(),
+        due_time: due.toTimeString().slice(0, 5),
+      })
+    }
+    setShowTaskDialog(true)
+  }
+
+  const handleTaskDialogClose = (open: boolean) => {
+    setShowTaskDialog(open)
+    if (!open) setTaskTemplate(null)
+  }
 
   const handleCompleteTask = async (taskId: string) => {
     try {
@@ -157,8 +198,35 @@ export default function TasksPage() {
               Administra tus prioridades diarias y seguimientos
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button onClick={() => setShowTaskDialog(true)} className="gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openWithTemplate("llamar_24h")}
+            >
+              Llamar en 24h
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openWithTemplate("seguimiento_3d")}
+            >
+              Seguimiento 3d
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => openWithTemplate("enviar_info")}
+            >
+              Enviar info
+            </Button>
+            <Button
+              onClick={() => {
+                setTaskTemplate(null)
+                setShowTaskDialog(true)
+              }}
+              className="gap-2"
+            >
               <Plus className="h-4 w-4" />
               Nueva Tarea
             </Button>
@@ -233,12 +301,11 @@ export default function TasksPage() {
 
       <TaskCreationDialog
         open={showTaskDialog}
-        onOpenChange={setShowTaskDialog}
+        onOpenChange={handleTaskDialogClose}
         onSuccess={() => {
-          if (refetch) {
-            refetch()
-          }
+          if (refetch) refetch()
         }}
+        initialValues={taskTemplate || undefined}
       />
     </div>
   )

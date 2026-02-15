@@ -37,6 +37,7 @@ interface NotificationPreferences {
   appointmentReminders: boolean
   followUpReminders: boolean
   emailNotifications: boolean
+  immediateEmailAlerts: boolean
   smsNotifications: boolean
 }
 
@@ -71,13 +72,25 @@ export default function SettingsPage() {
   const [savingPassword, setSavingPassword] = useState(false)
 
   // Notifications state
-  const [notifications, setNotifications] = useState<NotificationPreferences>({
+  const defaultNotifications: NotificationPreferences = {
     newLeadNotifications: true,
     appointmentReminders: true,
     followUpReminders: true,
     emailNotifications: false,
+    immediateEmailAlerts: true,
     smsNotifications: true,
-  })
+  }
+
+  const defaultNotifications: NotificationPreferences = {
+    newLeadNotifications: true,
+    appointmentReminders: true,
+    followUpReminders: true,
+    emailNotifications: false,
+    immediateEmailAlerts: true,
+    smsNotifications: true,
+  }
+
+  const [notifications, setNotifications] = useState<NotificationPreferences>({ ...defaultNotifications })
   const [savingNotifications, setSavingNotifications] = useState(false)
 
   // Templates state
@@ -120,7 +133,8 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings/notifications")
       if (res.ok) {
         const data = await res.json()
-        setNotifications(data.preferences || notifications)
+        const prefs = (data.preferences || {}) as Partial<NotificationPreferences>
+        setNotifications({ ...defaultNotifications, ...prefs })
       }
     } catch (error) {
       console.error("Error loading notifications:", error)
@@ -524,6 +538,19 @@ export default function SettingsPage() {
                     checked={notifications.emailNotifications}
                     onCheckedChange={(checked) =>
                       setNotifications({ ...notifications, emailNotifications: checked })
+                    }
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Email de alerta inmediata</Label>
+                    <p className="text-sm text-muted-foreground">Recibe emails al instante por nuevos leads, citas y tareas vencidas</p>
+                  </div>
+                  <Switch
+                    checked={notifications.immediateEmailAlerts}
+                    onCheckedChange={(checked) =>
+                      setNotifications({ ...notifications, immediateEmailAlerts: checked })
                     }
                   />
                 </div>

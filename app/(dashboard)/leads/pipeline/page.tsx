@@ -12,6 +12,7 @@ import { Phone, Mail, GripVertical, Loader2 } from "lucide-react"
 import { useLeads } from "@/hooks/use-supabase-data"
 import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { toast } from "sonner"
 
 const stages = [
   { id: "nuevo", name: "Nuevos", color: "bg-blue-500" },
@@ -127,8 +128,7 @@ export default function PipelinePage() {
       })
     } catch (error) {
       console.error('Error updating lead status:', error)
-      // Revert UI change on error
-      alert('Error al actualizar el estado del lead. Por favor intenta de nuevo.')
+      toast.error('Error al actualizar el estado del lead. Por favor intenta de nuevo.')
     }
 
     setDraggedLead(null)
@@ -214,6 +214,13 @@ export default function PipelinePage() {
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">{lead.vehicle_interest || "Sin vehículo especificado"}</p>
+                          {(lead.budget_range || lead.deal_amount) && (
+                            <p className="text-xs font-medium text-foreground mt-1">
+                              {lead.deal_amount
+                                ? `$${Number(lead.deal_amount).toLocaleString()}`
+                                : lead.budget_range}
+                            </p>
+                          )}
                         </div>
                       </div>
 

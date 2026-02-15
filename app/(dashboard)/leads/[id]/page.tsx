@@ -1,8 +1,8 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-
-import { useState, use } from "react"
+import { toast } from "sonner"
+import { useState, use, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GlassCard } from "@/components/glass-card"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,6 +21,9 @@ import {
   MapPin,
   ArrowLeft,
   CheckCircle2,
+  Briefcase,
+  UserPlus,
+  Pencil,
 } from "lucide-react"
 import Link from "next/link"
 import { CallLoggingModal } from "@/components/call-logging-modal"
@@ -29,23 +32,68 @@ import { LeadQualificationForm } from "@/components/lead-qualification-form"
 import { useLead } from "@/hooks/use-supabase-data"
 import { Loader2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, format } from "date-fns"
 import { es } from "date-fns/locale"
 import { LeadStatusUpdateDialog } from "@/components/lead-status-update-dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const searchParams = useSearchParams()
+  const initialTab = searchParams.get("tab") || "resumen"
   const { lead, loading, error } = useLead(id)
   const [showCallModal, setShowCallModal] = useState(false)
   const [showTaskDialog, setShowTaskDialog] = useState(false)
+  const [taskTemplate, setTaskTemplate] = useState<{
+    title: string
+    task_type: string
+    due_at: string
+    due_time?: string
+  } | null>(null)
   const [showStatusDialog, setShowStatusDialog] = useState(false)
+  const [activityNote, setActivityNote] = useState("")
+  const [isAddingNote, setIsAddingNote] = useState(false)
+  const [notesText, setNotesText] = useState("")
+  const [isSavingNotes, setIsSavingNotes] = useState(false)
+
+  useEffect(() => {
+    if (lead?.notes) setNotesText(lead.notes)
+  }, [lead?.notes])
 
   if (loading) {
     return (
       <div className="flex flex-col h-full">
         <DashboardHeader title="Lead" subtitle="Cargando..." />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex-1 px-8 pt-10 pb-8 overflow-y-auto">
+          <div className="max-w-5xl mx-auto space-y-6">
+            <Skeleton className="h-10 w-32 rounded-2xl" />
+            <GlassCard>
+              <CardContent className="pt-6">
+                <div className="flex gap-4">
+                  <Skeleton className="h-16 w-16 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-8 w-48" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+              </CardContent>
+            </GlassCard>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <GlassCard key={i}>
+                  <CardContent className="pt-6">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-6 w-full mb-1" />
+                    <Skeleton className="h-4 w-20" />
+                  </CardContent>
+                </GlassCard>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -80,7 +128,19 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     createdAt: lead.created_at,
     lastContact: lead.last_contact_at,
     notes: lead.notes || "",
+    occupation: lead.occupation,
+    city: lead.city,
+    state: lead.state,
+    creditType: lead.credit_type,
+    downPayment: lead.down_payment_amount,
+    hasCosigner: lead.has_cosigner,
+    employments: lead.lead_employments || [],
   }
+
+  const primaryEmployment = leadData.employments.find((e: any) => e.is_primary !== false) || leadData.employments[0]
+  const employmentDisplay = primaryEmployment
+    ? `${primaryEmployment.employer_name || "Empleador"}${primaryEmployment.income_value ? ` · $${Number(primaryEmployment.income_value).toLocaleString()}/mes` : ""}`
+    : null
 
   // Transform interactions, tasks, and appointments into timeline activities
   const activities: any[] = []
@@ -120,7 +180,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
       activities.push({
         id: interaction.id,
-        type: "call",
+        type: interactionType === "note" ? "note" : "call",
         description,
         createdBy: userName,
         createdAt,
@@ -211,6 +271,73 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     setTimeout(() => setShowCallModal(true), 1000)
   }
 
+  const handleAddNote = async () => {
+    if (!activityNote.trim()) return
+    setIsAddingNote(true)
+    try {
+      const res = await fetch("/api/interactions/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead_id: lead.id,
+          type: "note",
+          notes: activityNote.trim(),
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Error al guardar la nota")
+      }
+      toast.success("Nota agregada")
+      setActivityNote("")
+      window.location.reload()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar la nota")
+    } finally {
+      setIsAddingNote(false)
+    }
+  }
+
+  const handleMarkCalificado = async () => {
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "calificado" }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Error al actualizar")
+      }
+      toast.success("Lead marcado como calificado")
+      window.location.reload()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al marcar como calificado")
+    }
+  }
+
+  const handleSaveNotes = async () => {
+    setIsSavingNotes(true)
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notesText }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Error al guardar las notas")
+      }
+      toast.success("Notas guardadas")
+      lead.notes = notesText
+      window.location.reload()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar las notas")
+    } finally {
+      setIsSavingNotes(false)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <DashboardHeader title="Detalles del Lead" subtitle={leadData.name} />
@@ -275,7 +402,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     <Mail className="h-4 w-4" />
                     Enviar Correo
                   </Button>
-                  <Link href="/appointments/book">
+                  <Link href={`/appointments?new=1&lead_id=${leadData.id}`}>
                     <Button variant="outline" className="gap-2 w-full h-11 bg-transparent rounded-2xl">
                       <Calendar className="h-4 w-4" />
                       Agendar Cita
@@ -286,51 +413,144 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </CardContent>
           </GlassCard>
 
-          {/* Info Grid */}
-          <div className="grid gap-6 md:grid-cols-3">
-            <GlassCard>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Car className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">Interés en Vehículo</span>
-                </div>
-                <p className="text-lg font-semibold text-foreground">{leadData.vehicleInterest}</p>
-              </CardContent>
-            </GlassCard>
-
-            <GlassCard>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <DollarSign className="h-5 w-5 text-success" />
-                  <span className="text-sm font-medium text-muted-foreground">Rango de Presupuesto</span>
-                </div>
-                <p className="text-lg font-semibold text-foreground">{leadData.budget}</p>
-              </CardContent>
-            </GlassCard>
-
-            <GlassCard>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Clock className="h-5 w-5 text-warning" />
-                  <span className="text-sm font-medium text-muted-foreground">Último Contacto</span>
-                </div>
-                <p className="text-lg font-semibold text-foreground">
-                  {leadData.lastContact 
-                    ? formatDistanceToNow(new Date(leadData.lastContact), { addSuffix: true, locale: es })
-                    : 'Nunca'}
-                </p>
-              </CardContent>
-            </GlassCard>
-          </div>
-
           {/* Tabs */}
-          <Tabs defaultValue="activity" className="space-y-6">
+          <Tabs defaultValue={initialTab} className="space-y-6" key={initialTab}>
             <TabsList>
+              <TabsTrigger value="resumen">Resumen</TabsTrigger>
               <TabsTrigger value="activity">Actividad</TabsTrigger>
               <TabsTrigger value="notes">Notas</TabsTrigger>
               <TabsTrigger value="qualification">Calificación</TabsTrigger>
-              <TabsTrigger value="info">Información</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="resumen" className="space-y-4">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <Car className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-muted-foreground">Vehículo + Presupuesto</span>
+                      </div>
+                      <Link href={`/leads/${leadData.id}/edit`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">{leadData.vehicleInterest}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{leadData.budget}</p>
+                  </CardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <DollarSign className="h-5 w-5 text-success" />
+                        <span className="text-sm font-medium text-muted-foreground">Crédito + Enganche</span>
+                      </div>
+                      <Link href={`/leads/${leadData.id}/edit`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground capitalize">
+                      {leadData.creditType ? leadData.creditType.replace("_", " ") : "Sin registrar"}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {leadData.downPayment != null
+                        ? `$${Number(leadData.downPayment).toLocaleString()}`
+                        : "Sin registrar"}
+                    </p>
+                  </CardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-muted-foreground">Ocupación + Dirección</span>
+                      </div>
+                      <Link href={`/leads/${leadData.id}/edit`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {leadData.occupation || "Sin registrar"}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {[leadData.state, leadData.city].filter(Boolean).join(", ") || "Sin registrar"}
+                    </p>
+                  </CardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <Briefcase className="h-5 w-5 text-warning" />
+                        <span className="text-sm font-medium text-muted-foreground">Empleo Principal</span>
+                      </div>
+                      <Link href={`/leads/${leadData.id}?tab=qualification`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {employmentDisplay || "Sin registrar"}
+                    </p>
+                  </CardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 text-warning" />
+                        <span className="text-sm font-medium text-muted-foreground">Último Contacto</span>
+                      </div>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {leadData.lastContact
+                        ? formatDistanceToNow(new Date(leadData.lastContact), { addSuffix: true, locale: es })
+                        : "Nunca"}
+                    </p>
+                  </CardContent>
+                </GlassCard>
+
+                <GlassCard>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <UserPlus className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-muted-foreground">Co-signer</span>
+                      </div>
+                      <Link href={`/leads/${leadData.id}?tab=qualification`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      {leadData.hasCosigner === true ? "Sí" : leadData.hasCosigner === false ? "No" : "Sin registrar"}
+                    </p>
+                  </CardContent>
+                </GlassCard>
+              </div>
+              <div className="flex justify-end">
+                <Link href={`/leads/${leadData.id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-2 rounded-2xl">
+                    <Pencil className="h-4 w-4" />
+                    Editar lead completo
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
 
             <TabsContent value="activity" className="space-y-4">
               <GlassCard>
@@ -378,10 +598,68 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     </div>
                   )}
 
-                  <div className="mt-6 pt-6 border-t border-border">
+                  <div className="mt-6 pt-6 border-t border-border space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const due = new Date(Date.now() + 24 * 60 * 60 * 1000)
+                          setTaskTemplate({
+                            title: `Llamar a ${leadData.name}`,
+                            task_type: "llamar",
+                            due_at: due.toISOString(),
+                            due_time: due.toTimeString().slice(0, 5),
+                          })
+                          setShowTaskDialog(true)
+                        }}
+                      >
+                        Llamar en 24h
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const due = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                          setTaskTemplate({
+                            title: `Seguimiento ${leadData.name}`,
+                            task_type: "seguimiento",
+                            due_at: due.toISOString(),
+                            due_time: "10:00",
+                          })
+                          setShowTaskDialog(true)
+                        }}
+                      >
+                        Seguimiento 3 días
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const due = new Date(Date.now() + 2 * 60 * 60 * 1000)
+                          setTaskTemplate({
+                            title: `Enviar info a ${leadData.name}`,
+                            task_type: "enviar_info",
+                            due_at: due.toISOString(),
+                            due_time: due.toTimeString().slice(0, 5),
+                          })
+                          setShowTaskDialog(true)
+                        }}
+                      >
+                        Enviar info
+                      </Button>
+                    </div>
                     <div className="flex gap-3">
-                      <Textarea placeholder="Agregar una nota o actualización..." rows={2} />
-                      <Button>Agregar Nota</Button>
+                      <Textarea
+                        placeholder="Agregar una nota o actualización..."
+                        rows={2}
+                        value={activityNote}
+                        onChange={(e) => setActivityNote(e.target.value)}
+                        disabled={isAddingNote}
+                      />
+                      <Button onClick={handleAddNote} disabled={isAddingNote || !activityNote.trim()}>
+                        {isAddingNote ? "Guardando..." : "Agregar Nota"}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -395,47 +673,23 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <Textarea placeholder="Agregar notas sobre este lead..." rows={6} />
-                    <Button>Guardar Notas</Button>
+                    <Textarea
+                      placeholder="Agregar notas sobre este lead..."
+                      rows={6}
+                      value={notesText}
+                      onChange={(e) => setNotesText(e.target.value)}
+                      disabled={isSavingNotes}
+                    />
+                    <Button onClick={handleSaveNotes} disabled={isSavingNotes}>
+                      {isSavingNotes ? "Guardando..." : "Guardar Notas"}
+                    </Button>
                   </div>
                 </CardContent>
               </GlassCard>
             </TabsContent>
 
-            <TabsContent value="qualification">
-              <LeadQualificationForm leadId={lead.id} />
-            </TabsContent>
-
-            <TabsContent value="info">
-              <GlassCard>
-                <CardHeader>
-                  <CardTitle>Información del Lead</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <Label className="text-sm text-muted-foreground">Asignado a</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">{leadData.assignedTo}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm text-muted-foreground">Fecha de Creación</Label>
-                      <p className="text-sm font-medium text-foreground mt-1">
-                        {leadData.createdAt 
-                          ? formatDistanceToNow(new Date(leadData.createdAt), { addSuffix: true, locale: es })
-                          : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm text-muted-foreground">Fuente</Label>
-                      <p className="text-sm font-medium text-foreground mt-1 capitalize">{leadData.source}</p>
-                    </div>
-                    <div>
-                      <Label className="text-sm text-muted-foreground">Estado</Label>
-                      <p className="text-sm font-medium text-foreground mt-1 capitalize">{leadData.status}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </GlassCard>
+            <TabsContent value="qualification" id="qualification">
+              <LeadQualificationForm leadId={lead.id} lead={lead} />
             </TabsContent>
           </Tabs>
 
@@ -446,7 +700,11 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Button variant="outline" className="justify-start gap-2 bg-transparent">
+                <Button
+                  variant="outline"
+                  className="justify-start gap-2 bg-transparent"
+                  onClick={handleMarkCalificado}
+                >
                   <CheckCircle2 className="h-4 w-4" />
                   Marcar como Calificado
                 </Button>
@@ -457,10 +715,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 >
                   <Calendar className="h-4 w-4" />
                   Crear Tarea
-                </Button>
-                <Button variant="outline" className="justify-start gap-2 bg-transparent">
-                  <Car className="h-4 w-4" />
-                  Compartir Vehículo
                 </Button>
                 <Button 
                     variant="outline" 
@@ -485,12 +739,14 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
       <TaskCreationDialog
         open={showTaskDialog}
-        onOpenChange={setShowTaskDialog}
+        onOpenChange={(open) => {
+          setShowTaskDialog(open)
+          if (!open) setTaskTemplate(null)
+        }}
         leadId={leadData.id}
         leadName={leadData.name}
-        onSuccess={() => {
-          // Optionally refresh lead data or show success message
-        }}
+        onSuccess={() => window.location.reload()}
+        initialValues={taskTemplate || undefined}
       />
 
       <LeadStatusUpdateDialog

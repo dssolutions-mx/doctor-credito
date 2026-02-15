@@ -237,7 +237,9 @@ export interface Database {
           budget_range: string | null
           status: string | null
           credit_score_range: string | null
+          credit_type: string | null
           down_payment_available: boolean | null
+          down_payment_amount: number | null
           urgency_level: string | null
           last_contact_at: string | null
           next_follow_up_at: string | null
@@ -249,6 +251,20 @@ export interface Database {
           commission_amount: number | null
           notes: string | null
           metadata: Json | null
+          occupation: string | null
+          address: string | null
+          city: string | null
+          state: string | null
+          has_other_employment: boolean | null
+          has_company: boolean | null
+          company_name: string | null
+          has_cosigner: boolean | null
+          has_driver_license: boolean | null
+          has_id: boolean | null
+          has_passport: boolean | null
+          has_ssn: boolean | null
+          has_tax_id: boolean | null
+          vehicle_id: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -274,6 +290,22 @@ export interface Database {
           commission_amount?: number | null
           notes?: string | null
           metadata?: Json | null
+          occupation?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          down_payment_amount?: number | null
+          credit_type?: string | null
+          has_other_employment?: boolean | null
+          has_company?: boolean | null
+          company_name?: string | null
+          has_cosigner?: boolean | null
+          has_driver_license?: boolean | null
+          has_id?: boolean | null
+          has_passport?: boolean | null
+          has_ssn?: boolean | null
+          has_tax_id?: boolean | null
+          vehicle_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -287,7 +319,9 @@ export interface Database {
           budget_range?: string | null
           status?: string | null
           credit_score_range?: string | null
+          credit_type?: string | null
           down_payment_available?: boolean | null
+          down_payment_amount?: number | null
           urgency_level?: string | null
           last_contact_at?: string | null
           next_follow_up_at?: string | null
@@ -299,6 +333,128 @@ export interface Database {
           commission_amount?: number | null
           notes?: string | null
           metadata?: Json | null
+          occupation?: string | null
+          address?: string | null
+          city?: string | null
+          state?: string | null
+          has_other_employment?: boolean | null
+          has_company?: boolean | null
+          company_name?: string | null
+          has_cosigner?: boolean | null
+          has_driver_license?: boolean | null
+          has_id?: boolean | null
+          has_passport?: boolean | null
+          has_ssn?: boolean | null
+          has_tax_id?: boolean | null
+          vehicle_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      lead_employments: {
+        Row: {
+          id: string
+          lead_id: string
+          employer_name: string | null
+          payment_method: string | null
+          payment_period: string | null
+          income_value: number | null
+          tenure_months: number | null
+          is_primary: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          employer_name?: string | null
+          payment_method?: string | null
+          payment_period?: string | null
+          income_value?: number | null
+          tenure_months?: number | null
+          is_primary?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          employer_name?: string | null
+          payment_method?: string | null
+          payment_period?: string | null
+          income_value?: number | null
+          tenure_months?: number | null
+          is_primary?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      lead_bank_accounts: {
+        Row: {
+          id: string
+          lead_id: string
+          bank_name: string | null
+          tenure_months: number | null
+          is_shared_account: boolean | null
+          is_company_account: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          bank_name?: string | null
+          tenure_months?: number | null
+          is_shared_account?: boolean | null
+          is_company_account?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          bank_name?: string | null
+          tenure_months?: number | null
+          is_shared_account?: boolean | null
+          is_company_account?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      lead_vehicle_interests: {
+        Row: {
+          id: string
+          lead_id: string
+          make: string | null
+          model: string | null
+          color: string | null
+          vehicle_type: string | null
+          year: number | null
+          vehicle_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          make?: string | null
+          model?: string | null
+          color?: string | null
+          vehicle_type?: string | null
+          year?: number | null
+          vehicle_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          make?: string | null
+          model?: string | null
+          color?: string | null
+          vehicle_type?: string | null
+          year?: number | null
+          vehicle_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
