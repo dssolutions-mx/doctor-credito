@@ -81,15 +81,6 @@ export default function SettingsPage() {
     smsNotifications: true,
   }
 
-  const defaultNotifications: NotificationPreferences = {
-    newLeadNotifications: true,
-    appointmentReminders: true,
-    followUpReminders: true,
-    emailNotifications: false,
-    immediateEmailAlerts: true,
-    smsNotifications: true,
-  }
-
   const [notifications, setNotifications] = useState<NotificationPreferences>({ ...defaultNotifications })
   const [savingNotifications, setSavingNotifications] = useState(false)
 
