@@ -23,7 +23,7 @@ export default function DealerDashboardPage() {
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Key Metrics */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div id="dealer-metrics" className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <GlassCard>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">

@@ -114,7 +114,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className={cn(
+      <nav id="sidebar-nav" className={cn(
         "flex-1 overflow-y-auto",
         isCollapsed ? "space-y-2 px-2 py-4" : "space-y-1 p-4"
       )}>
@@ -125,6 +125,7 @@ export function AppSidebar() {
             <Link
               key={item.name}
               href={item.href}
+              data-tour={item.href === "/conversations" ? "conversations-nav" : undefined}
               className={cn(
                   "flex items-center rounded-2xl text-[15px] leading-[20px] font-medium transition-all",
                   isCollapsed ? "justify-center h-11 w-11" : "gap-3 px-4 py-3",

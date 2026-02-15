@@ -20,6 +20,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { User, Bell, Palette, Building2, MessageSquare, Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react"
+import { RestartOnboardingButton } from "@/components/onboarding/RestartOnboardingButton"
 import { useAuthStore } from "@/lib/stores/auth-store"
 import { useRole } from "@/lib/role-context"
 import { toast } from "sonner"
@@ -809,6 +810,14 @@ export default function SettingsPage() {
                     <option>Español</option>
                     <option>English</option>
                   </select>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Guía de inicio</Label>
+                    <p className="text-sm text-muted-foreground">Repite el tour interactivo para conocer las funciones del sistema</p>
+                  </div>
+                  <RestartOnboardingButton />
                 </div>
               </CardContent>
             </GlassCard>

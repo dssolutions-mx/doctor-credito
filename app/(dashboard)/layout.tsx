@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider"
 import { RoleProvider } from "@/lib/role-context"
 import { useAuthStore } from "@/lib/stores/auth-store"
 
@@ -36,10 +37,12 @@ export default function DashboardGroupLayout({ children }: { children: React.Rea
 
   return (
     <RoleProvider>
-      <div className="flex h-screen overflow-hidden">
-        <AppSidebar />
-        <main className="flex-1 overflow-hidden">{children}</main>
-      </div>
+      <OnboardingProvider>
+        <div className="flex h-screen overflow-hidden">
+          <AppSidebar />
+          <main className="flex-1 overflow-hidden">{children}</main>
+        </div>
+      </OnboardingProvider>
     </RoleProvider>
   )
 }

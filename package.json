@@ -59,7 +59,9 @@
     "tailwind-merge": "^2.5.5",
     "vaul": "^1.1.2",
     "zod": "^4.1.12",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "motion": "^12.0.0",
+    "nextstepjs": "^2.1.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",

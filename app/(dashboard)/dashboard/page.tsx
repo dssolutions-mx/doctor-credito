@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
       <div className="flex-1 space-y-8 px-8 pt-10 pb-8 overflow-y-auto">
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div id="stats-grid" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <GlassCard key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -274,7 +274,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <GlassCard>
+        <GlassCard id="quick-actions">
           <CardHeader>
             <CardTitle>Acciones Rápidas</CardTitle>
             <CardDescription>Tareas comunes para acelerar tu flujo de trabajo</CardDescription>
